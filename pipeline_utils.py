@@ -714,6 +714,20 @@ def _serpapi_score(lens_type: str, position: int, n: int) -> float:
 # ===========================================================================
 
 class S3Uploader:
+    """
+    Uploads crops to S3 and returns a URL Google Lens can fetch.
+
+    Two URL strategies:
+      - public_read: false (recommended) -> object stays private; we return a
+        time-limited PRESIGNED URL. Works on ANY bucket, no public-access config,
+        no ACLs. This avoids the classic AccessDenied caused by sending a
+        public-read ACL to a modern bucket that has ACLs disabled.
+      - public_read: true -> we try to set a public-read ACL and return a plain
+        public URL. This ONLY works if the bucket has ACLs enabled AND Block
+        Public Access turned off. If the ACL is rejected, we automatically fall
+        back to a presigned URL instead of crashing.
+    """
+
     def __init__(self, cfg: dict, video_id: str):
         import boto3
         self.cfg = cfg
@@ -723,23 +737,87 @@ class S3Uploader:
         self.prefix = get(cfg, "s3.key_prefix", "product-detections/{video_id}").format(
             video_id=video_id)
         self.public = bool(get(cfg, "s3.public_read", False))
+        self.presign_ttl = int(get(cfg, "s3.presign_expiry_seconds", 7 * 24 * 3600))
+        self._acl_disabled = False   # set true once we learn ACLs aren't allowed
         self.client = boto3.client("s3", region_name=self.region) if self.enabled else None
+
+    # -- preflight: verify the bucket is reachable & writable, clear errors ----
+    def preflight(self) -> None:
+        """Fail fast with an actionable message instead of a deep boto3 trace."""
+        if not self.enabled:
+            return
+        from botocore.exceptions import ClientError, NoCredentialsError
+        if not self.bucket or self.bucket == "my-output-bucket":
+            raise RuntimeError(
+                "s3.bucket is not set to a real bucket you own (it is "
+                f"{self.bucket!r}). Edit config.yaml -> s3.bucket."
+            )
+        if not os.getenv("AWS_ACCESS_KEY_ID") and not os.getenv("AWS_PROFILE"):
+            raise RuntimeError(
+                "No AWS credentials found. Set AWS_ACCESS_KEY_ID / "
+                "AWS_SECRET_ACCESS_KEY (or a profile / IAM role)."
+            )
+        try:
+            self.client.head_bucket(Bucket=self.bucket)
+        except NoCredentialsError:
+            raise RuntimeError("AWS credentials are missing or invalid.")
+        except ClientError as e:
+            code = e.response.get("Error", {}).get("Code", "")
+            if code in ("404", "NoSuchBucket"):
+                raise RuntimeError(
+                    f"Bucket {self.bucket!r} does not exist. Create it or fix "
+                    "s3.bucket in config.yaml."
+                )
+            if code in ("403", "AccessDenied"):
+                raise RuntimeError(
+                    f"Access denied to bucket {self.bucket!r}. Either it is not "
+                    "yours, or your IAM user/role lacks s3:PutObject / "
+                    "s3:ListBucket on it. Check the bucket name and IAM policy."
+                )
+            if code in ("301", "PermanentRedirect", "AuthorizationHeaderMalformed"):
+                raise RuntimeError(
+                    f"Bucket {self.bucket!r} is in a different region than "
+                    f"{self.region!r}. Set s3.region to the bucket's real region."
+                )
+            raise
+
+    def _presigned_url(self, key: str) -> str:
+        return self.client.generate_presigned_url(
+            "get_object", Params={"Bucket": self.bucket, "Key": key},
+            ExpiresIn=self.presign_ttl)
 
     def upload(self, local_path: str, key_suffix: Optional[str] = None) -> str:
         if not self.enabled:
             return ""
+        from botocore.exceptions import ClientError
+
         suffix = key_suffix or Path(local_path).name
         key = f"{self.prefix}/{suffix}"
         extra = {"ContentType": "image/jpeg"}
-        if self.public:
-            extra["ACL"] = "public-read"
+
+        # Try a public ACL only if requested and we haven't already learned it's
+        # disabled on this bucket. Fall back cleanly to a private upload.
+        if self.public and not self._acl_disabled:
+            try:
+                self.client.upload_file(
+                    local_path, self.bucket, key,
+                    ExtraArgs={**extra, "ACL": "public-read"})
+                return f"https://{self.bucket}.s3.{self.region}.amazonaws.com/{key}"
+            except ClientError as e:
+                code = e.response.get("Error", {}).get("Code", "")
+                if code in ("AccessDenied", "AccessControlListNotSupported",
+                            "InvalidBucketAclWithObjectOwnership"):
+                    # Bucket has ACLs disabled / Block Public Access on.
+                    # Stop trying ACLs and use presigned URLs for the rest.
+                    print("[s3] Public ACL not allowed on this bucket; using "
+                          "presigned URLs instead (this is fine for Google Lens).")
+                    self._acl_disabled = True
+                else:
+                    raise
+
+        # Private upload + presigned URL (works on any bucket).
         self.client.upload_file(local_path, self.bucket, key, ExtraArgs=extra)
-        if self.public:
-            return f"https://{self.bucket}.s3.{self.region}.amazonaws.com/{key}"
-        # presigned URL so Google Lens / your UI can fetch it temporarily
-        return self.client.generate_presigned_url(
-            "get_object", Params={"Bucket": self.bucket, "Key": key},
-            ExpiresIn=7 * 24 * 3600)
+        return self._presigned_url(key)
 
 
 # ===========================================================================

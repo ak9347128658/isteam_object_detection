@@ -164,16 +164,27 @@ network:
 # --------------------------------------------------------------------------
 s3:
   enabled: true
-  bucket: "my-output-bucket"
+  # Bucket to upload detected product crops to. Must be a bucket you own,
+  # and s3.region below must match its actual region.
+  bucket: "isteam-my-output-bucket"
+  # Must match the bucket's real region, or uploads fail with a redirect error.
   region: "us-east-1"
   # Key prefix. {video_id} is replaced with a slug of the video name.
   key_prefix: "product-detections/{video_id}"
   # Also keep a local copy of crops.
   keep_local: true
   local_crops_dir: "output/crops"
-  # Make uploaded objects public-read (needed if you overlay them on a public page,
-  # and required so Google Lens can fetch the crop by URL).
-  public_read: true
+  # Public-read ACL for uploaded objects.
+  #   false (recommended): objects stay private; the pipeline returns a
+  #          time-limited PRESIGNED URL that Google Lens can still fetch.
+  #          Works on ANY bucket with no public-access setup and avoids the
+  #          AccessDenied you get when a bucket has ACLs disabled.
+  #   true : only works if the bucket has ACLs ENABLED and Block Public Access
+  #          turned OFF. If the ACL is rejected the pipeline auto-falls back to
+  #          a presigned URL.
+  public_read: false
+  # How long presigned URLs stay valid (seconds). Default 7 days.
+  presign_expiry_seconds: 604800
 
 # --------------------------------------------------------------------------
 # METADATA OUTPUT: the timestamped file used to overlay recommendations on video.
