@@ -1,0 +1,185 @@
+# ============================================================================
+# Product Detection & Recommendation Pipeline - Configuration
+# ----------------------------------------------------------------------------
+# EVERYTHING is configurable here. Change values, re-run the notebook.
+# The "0.90 match" the user asked for lives under `matching.min_match_score`.
+# ============================================================================
+
+# --------------------------------------------------------------------------
+# INPUT: where the video comes from. All three modes work.
+# --------------------------------------------------------------------------
+input:
+  # source_type: one of ["local", "url", "s3"]
+  source_type: "local"
+
+  # Used when source_type == "local". Path relative to this project or absolute.
+  local_path: "videos/input.mp4"
+
+  # Used when source_type == "url". Any direct http(s) link to a video file.
+  url: "https://example.com/video.mp4"
+
+  # Used when source_type == "s3". A public (or credentialed) S3 object.
+  # Both "s3://bucket/key" and "https://bucket.s3.region.amazonaws.com/key" work.
+  s3_uri: "s3://my-public-bucket/videos/input.mp4"
+
+  # Where downloaded/copied videos are cached locally before processing.
+  work_dir: "workdir"
+
+# --------------------------------------------------------------------------
+# FRAME SAMPLING: how many frames we pull out of the video to analyze.
+# --------------------------------------------------------------------------
+frames:
+  # Sample one frame every N seconds of video. Lower = more thorough, slower.
+  sample_every_seconds: 1.0
+
+  # Hard cap on number of frames analyzed (safety valve for long videos). 0 = no cap.
+  max_frames: 0
+
+  # Optional: only process a time window [start, end] in seconds. null = whole video.
+  start_time: null
+  end_time: null
+
+  # Skip near-identical consecutive frames (scene-change filtering) to save work.
+  # Frames whose perceptual-hash distance is below this are skipped.
+  skip_similar_frames: true
+  similar_frame_hash_distance: 4
+
+# --------------------------------------------------------------------------
+# DETECTION: open-vocabulary object detector (YOLOE / YOLO-World).
+# --------------------------------------------------------------------------
+detection:
+  # Backend: "yoloe" (recommended, open-vocab) or "yoloworld".
+  backend: "yoloe"
+
+  # Model weights. Auto-downloaded by ultralytics on first run.
+  #   YOLOE:      yoloe-11l-seg.pt  (large, most accurate)
+  #   YOLO-World: yolov8x-worldv2.pt
+  model_weights: "yoloe-11l-seg.pt"
+
+  # Run on GPU. "cuda:0" for your GPU, "cpu" to force CPU.
+  device: "cuda:0"
+
+  # Minimum detection confidence to keep a box. Configurable.
+  confidence_threshold: 0.35
+
+  # NMS IoU threshold.
+  iou_threshold: 0.50
+
+  # Open-vocabulary prompt list: the product categories to look for.
+  # This is a prompt, not a hard limit — add anything you sell/recommend.
+  # Leave `use_builtin_vocab: true` to also use YOLOE's 4585-name vocabulary.
+  use_builtin_vocab: true
+
+  # Prompts are loaded from an external file (one product name per line,
+  # '#' comments and blank lines ignored). Edit that file to add products.
+  product_prompts_file: "product_prompts.txt"
+
+  # Optional inline extra prompts, appended to whatever is in the file above.
+  # Leave empty to rely solely on the file.
+  product_prompts: []
+
+  # Classes to IGNORE completely (humans + body parts). Matched case-insensitively
+  # against the detected label. The user explicitly wants humans ignored.
+  ignore_labels:
+    - "person"
+    - "man"
+    - "woman"
+    - "boy"
+    - "girl"
+    - "human"
+    - "face"
+    - "hand"
+    - "foot"
+    - "leg"
+    - "arm"
+
+  # Minimum crop size in pixels (w and h). Tiny detections are usually noise.
+  min_crop_size: 40
+
+# --------------------------------------------------------------------------
+# DEDUP: collapse the same physical product seen across many frames into ONE.
+# Uses CLIP image embeddings + cosine similarity.
+# --------------------------------------------------------------------------
+dedup:
+  clip_model: "ViT-B-32"
+  clip_pretrained: "openai"
+  device: "cuda:0"
+  # Two crops with cosine similarity >= this are considered the SAME product.
+  same_product_similarity: 0.92
+  # Keep the sharpest / largest crop as the representative image of each product.
+  representative: "largest"   # "largest" | "sharpest"
+
+# --------------------------------------------------------------------------
+# MATCHING: find the EXACT product on real ecommerce sites.
+# Backend is Google only (Google Lens via SerpApi). This is where the "90%"
+# threshold lives.
+# --------------------------------------------------------------------------
+matching:
+  # THE "90%" the user asked for. Only keep recommendations at/above this score.
+  # Range 0.0 - 1.0. Set to 0.90 for a 90% match requirement.
+  min_match_score: 0.90
+
+  # Max recommended products to keep per detected item.
+  max_results_per_product: 5
+
+  # Restrict recommendations to these trusted ecommerce domains (empty = all).
+  trusted_domains:
+    - "amazon."
+    - "ebay."
+    - "walmart."
+    - "flipkart."
+    - "myntra."
+    - "target.com"
+    - "bestbuy.com"
+    - "aliexpress."
+    - "etsy.com"
+    - "nike.com"
+    - "adidas."
+
+  # --- Google Lens (via SerpApi) settings ---
+  serpapi:
+    # Which Lens tab to read. "exact_matches" gives the SAME product;
+    # "products" gives shoppable matches; "visual_matches" gives look-alikes.
+    lens_type: "exact_matches"   # exact_matches | products | visual_matches | all
+    country: "us"
+    language: "en"
+
+# --------------------------------------------------------------------------
+# NETWORKING: retries/backoff/caching so you don't get rate-limited or crash.
+# --------------------------------------------------------------------------
+network:
+  max_retries: 5
+  backoff_base_seconds: 1.5     # exponential: base^attempt
+  backoff_max_seconds: 60
+  # Minimum delay between search-API calls (politeness / rate-limit safety).
+  min_interval_seconds: 1.0
+  request_timeout_seconds: 30
+  # Cache search results on disk so re-runs never re-query (and never re-bill).
+  cache_dir: "cache/search"
+  # Cache CLIP/detection artifacts too.
+  cache_enabled: true
+
+# --------------------------------------------------------------------------
+# S3 OUTPUT: where detected product crops are uploaded.
+# --------------------------------------------------------------------------
+s3:
+  enabled: true
+  bucket: "my-output-bucket"
+  region: "us-east-1"
+  # Key prefix. {video_id} is replaced with a slug of the video name.
+  key_prefix: "product-detections/{video_id}"
+  # Also keep a local copy of crops.
+  keep_local: true
+  local_crops_dir: "output/crops"
+  # Make uploaded objects public-read (needed if you overlay them on a public page,
+  # and required so Google Lens can fetch the crop by URL).
+  public_read: true
+
+# --------------------------------------------------------------------------
+# METADATA OUTPUT: the timestamped file used to overlay recommendations on video.
+# --------------------------------------------------------------------------
+metadata:
+  output_path: "output/detections.json"
+  # Also emit a WebVTT file for direct <track> overlay in an HTML5 <video>.
+  emit_webvtt: true
+  webvtt_path: "output/detections.vtt"

@@ -1,0 +1,25 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# Model weights (auto-downloaded)
+*.pt
+*.onnx
+
+# Work / output artifacts
+workdir/
+output/
+cache/
+videos/
+catalog/embeddings.npy
+
+# OS
+.DS_Store
+Thumbs.db

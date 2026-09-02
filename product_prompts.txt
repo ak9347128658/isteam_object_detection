@@ -1,0 +1,410 @@
+# Product prompts for open-vocabulary detection (YOLOE / YOLO-World).
+# One product name per line. Lines starting with '#' and blank lines are ignored.
+# Add / remove freely - this is a text prompt, not a fixed class list.
+# Keep names concrete and singular (e.g. "wristwatch", not "watches").
+
+# ---------------------------------------------------------------------------
+# WATCHES & JEWELRY
+# ---------------------------------------------------------------------------
+watch
+wristwatch
+smartwatch
+analog watch
+digital watch
+pocket watch
+necklace
+pendant
+choker
+ring
+engagement ring
+bracelet
+bangle
+anklet
+earrings
+stud earrings
+hoop earrings
+brooch
+cufflinks
+tiara
+
+# ---------------------------------------------------------------------------
+# BAGS & LUGGAGE
+# ---------------------------------------------------------------------------
+handbag
+tote bag
+shoulder bag
+crossbody bag
+clutch
+purse
+wallet
+backpack
+laptop backpack
+duffel bag
+gym bag
+suitcase
+carry-on luggage
+travel bag
+messenger bag
+fanny pack
+briefcase
+diaper bag
+drawstring bag
+
+# ---------------------------------------------------------------------------
+# FOOTWEAR
+# ---------------------------------------------------------------------------
+shoe
+sneaker
+running shoe
+basketball shoe
+dress shoe
+loafer
+boot
+ankle boot
+chelsea boot
+hiking boot
+rain boot
+sandal
+flip-flop
+slipper
+high heels
+stiletto
+wedge shoe
+flat shoe
+ballet flat
+crocs
+espadrille
+
+# ---------------------------------------------------------------------------
+# CLOTHING - TOPS
+# ---------------------------------------------------------------------------
+shirt
+t-shirt
+polo shirt
+dress shirt
+blouse
+tank top
+crop top
+sweater
+sweatshirt
+hoodie
+cardigan
+turtleneck
+jersey
+flannel shirt
+
+# ---------------------------------------------------------------------------
+# CLOTHING - OUTERWEAR
+# ---------------------------------------------------------------------------
+jacket
+denim jacket
+leather jacket
+bomber jacket
+blazer
+coat
+trench coat
+overcoat
+puffer jacket
+raincoat
+windbreaker
+vest
+parka
+poncho
+
+# ---------------------------------------------------------------------------
+# CLOTHING - BOTTOMS & DRESSES
+# ---------------------------------------------------------------------------
+jeans
+trousers
+pants
+chinos
+shorts
+skirt
+mini skirt
+leggings
+joggers
+cargo pants
+dress
+maxi dress
+cocktail dress
+gown
+jumpsuit
+romper
+overalls
+suit
+tuxedo
+
+# ---------------------------------------------------------------------------
+# HEADWEAR & ACCESSORIES
+# ---------------------------------------------------------------------------
+hat
+cap
+baseball cap
+beanie
+fedora
+sun hat
+bucket hat
+visor
+headband
+scarf
+tie
+bow tie
+belt
+gloves
+mittens
+socks
+stockings
+sunglasses
+eyeglasses
+reading glasses
+umbrella
+
+# ---------------------------------------------------------------------------
+# ELECTRONICS - PERSONAL
+# ---------------------------------------------------------------------------
+cell phone
+smartphone
+laptop
+tablet
+computer monitor
+keyboard
+computer mouse
+headphones
+over-ear headphones
+earbuds
+wireless earbuds
+smartwatch band
+camera
+dslr camera
+mirrorless camera
+action camera
+webcam
+drone
+power bank
+phone case
+charger
+usb cable
+hard drive
+usb flash drive
+e-reader
+handheld game console
+vr headset
+fitness tracker
+
+# ---------------------------------------------------------------------------
+# ELECTRONICS - HOME
+# ---------------------------------------------------------------------------
+television
+tv remote
+speaker
+bluetooth speaker
+smart speaker
+soundbar
+projector
+router
+gaming console
+game controller
+printer
+scanner
+desktop computer
+
+# ---------------------------------------------------------------------------
+# HOME APPLIANCES
+# ---------------------------------------------------------------------------
+microwave
+oven
+refrigerator
+dishwasher
+washing machine
+dryer
+air conditioner
+fan
+heater
+air purifier
+humidifier
+vacuum cleaner
+robot vacuum
+blender
+mixer
+food processor
+coffee maker
+espresso machine
+kettle
+electric kettle
+toaster
+rice cooker
+air fryer
+slow cooker
+pressure cooker
+iron
+sewing machine
+
+# ---------------------------------------------------------------------------
+# KITCHEN & DINING
+# ---------------------------------------------------------------------------
+cup
+mug
+coffee mug
+glass
+wine glass
+bottle
+water bottle
+thermos
+flask
+plate
+bowl
+pan
+frying pan
+pot
+cooking pot
+knife
+kitchen knife
+fork
+spoon
+cutting board
+lunch box
+food container
+teapot
+
+# ---------------------------------------------------------------------------
+# FURNITURE
+# ---------------------------------------------------------------------------
+chair
+office chair
+dining chair
+armchair
+sofa
+couch
+recliner
+table
+dining table
+coffee table
+desk
+bookshelf
+cabinet
+dresser
+wardrobe
+bed
+mattress
+nightstand
+stool
+bench
+ottoman
+tv stand
+shoe rack
+
+# ---------------------------------------------------------------------------
+# HOME DECOR & LIGHTING
+# ---------------------------------------------------------------------------
+lamp
+table lamp
+floor lamp
+desk lamp
+ceiling light
+chandelier
+mirror
+clock
+wall clock
+alarm clock
+picture frame
+vase
+candle
+rug
+carpet
+curtain
+cushion
+pillow
+throw blanket
+wall art
+plant pot
+
+# ---------------------------------------------------------------------------
+# BEAUTY & PERSONAL CARE
+# ---------------------------------------------------------------------------
+perfume
+cologne
+lipstick
+nail polish
+makeup palette
+foundation bottle
+mascara
+face cream jar
+shampoo bottle
+hair dryer
+hair straightener
+curling iron
+electric toothbrush
+razor
+electric shaver
+trimmer
+
+# ---------------------------------------------------------------------------
+# SPORTS & OUTDOORS
+# ---------------------------------------------------------------------------
+bicycle
+helmet
+skateboard
+scooter
+tennis racket
+badminton racket
+football
+soccer ball
+basketball
+baseball
+baseball bat
+baseball glove
+golf club
+dumbbell
+kettlebell
+yoga mat
+treadmill
+jump rope
+tent
+sleeping bag
+backpacking bag
+fishing rod
+surfboard
+skis
+snowboard
+
+# ---------------------------------------------------------------------------
+# TOYS, BABY & MISC
+# ---------------------------------------------------------------------------
+teddy bear
+doll
+action figure
+board game
+puzzle
+building blocks
+toy car
+remote control car
+stroller
+baby car seat
+high chair
+book
+notebook
+pen
+backpack
+
+# ---------------------------------------------------------------------------
+# MUSICAL INSTRUMENTS
+# ---------------------------------------------------------------------------
+guitar
+acoustic guitar
+electric guitar
+violin
+keyboard piano
+drum
+ukulele
+microphone
+
+# ---------------------------------------------------------------------------
+# TOOLS
+# ---------------------------------------------------------------------------
+drill
+power drill
+screwdriver
+hammer
+wrench
+tool box
+flashlight
