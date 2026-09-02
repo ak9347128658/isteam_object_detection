@@ -13,6 +13,10 @@ numpy>=1.26.0
 pillow>=10.2.0
 imagehash>=4.3.1            # perceptual hashing for frame/crop dedup
 
+# --- AI super-resolution for crops (optional; crops.super_resolution.enabled) ---
+realesrgan>=0.3.0          # Real-ESRGAN upscaler (RealESRGANer)
+basicsr>=1.4.2             # backbone used by realesrgan
+
 # --- Embeddings for dedup + offline matching ---
 open-clip-torch>=2.24.0
 torch>=2.2.0               # install the CUDA build separately (see note above)

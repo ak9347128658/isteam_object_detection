@@ -44,6 +44,12 @@ frames:
   skip_similar_frames: true
   similar_frame_hash_distance: 4
 
+  # At each sample point, scan this many consecutive frames and keep the
+  # SHARPEST one. This is the main defense against motion-blurred crops
+  # (blurry frames can't be un-blurred later). 1 = disabled. Try 5-8 for
+  # fast-moving / shaky footage.
+  sharpest_window: 6
+
 # --------------------------------------------------------------------------
 # DETECTION: open-vocabulary object detector (YOLOE / YOLO-World).
 # --------------------------------------------------------------------------
@@ -93,31 +99,56 @@ detection:
     - "leg"
     - "arm"
 
-  # Minimum crop size in pixels (w and h). Tiny detections are usually noise.
-  # Raise this (e.g. 64-96) to drop small, low-detail detections.
-  min_crop_size: 48
+  # Minimum crop size in pixels (w and h). Tiny detections are usually noise
+  # AND produce blurry crops (too few real pixels). Raise to 64-96 to drop
+  # small, low-detail detections that can never look sharp.
+  min_crop_size: 64
 
   # Reject motion-blurred detections by Laplacian-variance sharpness.
   # 0 = disabled. Typical usable values: 60-150 (higher = stricter).
-  # Start around 80 if your video has a lot of motion blur.
+  # Set ~80-100 to force only crisp crops through.
   min_sharpness: 0.0
 
 # --------------------------------------------------------------------------
 # CROPS: quality of the saved product images (fed to Google Lens).
 # Better crops => far better recommendation matches.
+# IMPORTANT: you cannot recover detail a low-res frame never captured. The
+# biggest quality win comes from frames.sharpest_window (picking a non-blurry
+# frame) and using a higher-resolution source video.
 # --------------------------------------------------------------------------
 crops:
   # Padding added around each detection box, as a fraction of box size.
-  margin_ratio: 0.08
-  # Upscale small crops so the shortest side reaches this many pixels.
-  # Google Lens matches best on reasonably large, sharp images.
-  min_output_side: 512
-  # Unsharp-mask sharpening strength (0 = off, 0.4-0.8 = mild, >1 = strong).
-  sharpen_strength: 0.6
-  # Output format: "jpg" (small) or "png" (lossless, bigger).
-  format: "jpg"
-  # JPEG quality when format == "jpg" (1-100). 95 keeps detail.
-  jpeg_quality: 95
+  margin_ratio: 0.10
+  # Target: upscale small crops so the shortest side reaches this many pixels.
+  # With AI super-resolution on, 768-1024 gives crisp, detailed crops.
+  min_output_side: 768
+  # Cap for the CLASSIC (non-AI) fallback only. Blowing a tiny region up too far
+  # with plain resize just makes a big blurry blob, so we never exceed this.
+  # (AI super-resolution ignores this cap because it reconstructs detail.)
+  max_upscale: 3.0
+  # Mild unsharp-mask, applied ONLY after a classic (non-AI) upscale (0 = off).
+  # Keep low (0.25-0.45); high values create ugly halos on soft footage.
+  sharpen_strength: 0.35
+  # Output format: "png" (lossless, recommended - no JPEG softening) or "jpg".
+  format: "png"
+  # JPEG quality when format == "jpg" (1-100). Use 98 to minimize artifacts.
+  jpeg_quality: 98
+
+  # --- AI super-resolution (the real quality boost) ------------------------
+  # Uses Real-ESRGAN on your GPU to RECONSTRUCT detail in small/soft crops
+  # (not just enlarge them). This is the strongest way to increase quality.
+  # Install once:  pip install realesrgan basicsr
+  super_resolution:
+    # Turn this ON for maximum crop quality. Slower (runs a model per crop).
+    enabled: true
+    # Output upscale factor applied to the crop.
+    scale: 4
+    # Weights: "RealESRGAN_x4plus" (photos, recommended) or "RealESRNet_x4plus".
+    model: "RealESRGAN_x4plus"
+    # Tile size to bound VRAM (smaller = less memory, a bit slower). 0 = no tiling.
+    tile: 256
+    # GPU device; defaults to detection.device if omitted.
+    device: "cuda:0"
 
 # --------------------------------------------------------------------------
 # DEDUP: collapse the same physical product seen across many frames into ONE.

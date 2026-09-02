@@ -299,6 +299,16 @@ def sample_frames(video_path: str | Path, cfg: dict) -> list[Frame]:
     skip_similar = bool(get(cfg, "frames.skip_similar_frames", True))
     max_dist = int(get(cfg, "frames.similar_frame_hash_distance", 4))
 
+    # At each sample point, look at a small window of consecutive frames and
+    # KEEP THE SHARPEST one. This avoids grabbing a motion-blurred frame, which
+    # is the #1 cause of blurry crops (you can't un-blur later).
+    sharp_window = int(get(cfg, "frames.sharpest_window", 5))
+    sharp_window = max(1, sharp_window)
+
+    def _sharpness(bgr) -> float:
+        gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+        return float(cv2.Laplacian(gray, cv2.CV_64F).var())
+
     frames: list[Frame] = []
     last_hash = None
     idx = 0
@@ -312,6 +322,20 @@ def sample_frames(video_path: str | Path, cfg: dict) -> list[Frame]:
             if in_window:
                 ok, img = cap.retrieve()
                 if ok and img is not None:
+                    # Scan the next (sharp_window-1) frames and pick the sharpest.
+                    best_img, best_idx, best_score = img, idx, _sharpness(img)
+                    for _ in range(sharp_window - 1):
+                        if not cap.grab():
+                            break
+                        idx += 1
+                        ok2, cand = cap.retrieve()
+                        if not ok2 or cand is None:
+                            continue
+                        sc = _sharpness(cand)
+                        if sc > best_score:
+                            best_img, best_idx, best_score = cand, idx, sc
+                    img = best_img
+
                     keep = True
                     if skip_similar:
                         ph = imagehash.phash(Image.fromarray(img[:, :, ::-1]))
@@ -319,7 +343,8 @@ def sample_frames(video_path: str | Path, cfg: dict) -> list[Frame]:
                             keep = False
                         last_hash = ph
                     if keep:
-                        frames.append(Frame(index=idx, timestamp=ts, image=img))
+                        frames.append(Frame(index=best_idx, timestamp=best_idx / fps,
+                                            image=img))
                         if max_frames and len(frames) >= max_frames:
                             break
         idx += 1
@@ -328,6 +353,96 @@ def sample_frames(video_path: str | Path, cfg: dict) -> list[Frame]:
 
     cap.release()
     return frames
+
+
+# ===========================================================================
+# SUPER-RESOLUTION (optional) - AI upscaler to genuinely recover detail
+# ===========================================================================
+
+class Upscaler:
+    """
+    Optional GPU super-resolution using Real-ESRGAN. Unlike plain resize, this
+    reconstructs real detail, which is the only way to actually *increase*
+    quality of small/soft crops rather than just enlarge them.
+
+    Enabled via config crops.super_resolution.enabled. If the package or weights
+    are unavailable, it degrades gracefully (returns None so callers fall back
+    to classic resize) and warns once.
+
+    Install (GPU):
+        pip install realesrgan basicsr
+    """
+
+    _warned = False
+
+    def __init__(self, cfg: dict):
+        self.cfg = cfg
+        self.enabled = bool(get(cfg, "crops.super_resolution.enabled", False))
+        self.scale = int(get(cfg, "crops.super_resolution.scale", 4))
+        self.model_name = get(cfg, "crops.super_resolution.model",
+                              "RealESRGAN_x4plus")
+        self.tile = int(get(cfg, "crops.super_resolution.tile", 256))
+        self.device = get(cfg, "crops.super_resolution.device",
+                          get(cfg, "detection.device", "cuda:0"))
+        self._engine = None
+        if self.enabled:
+            self._engine = self._build_engine()
+
+    def _build_engine(self):
+        try:
+            import torch
+            from realesrgan import RealESRGANer
+            from basicsr.archs.rrdbnet_arch import RRDBNet
+        except Exception as e:  # package missing
+            if not Upscaler._warned:
+                print(f"[super-res] Real-ESRGAN not available ({e}); falling back "
+                      f"to classic upscaling. Install with: pip install realesrgan basicsr")
+                Upscaler._warned = True
+            self.enabled = False
+            return None
+
+        # Model + pretrained weights URL for the common x4 general model.
+        model_urls = {
+            "RealESRGAN_x4plus": (
+                "https://github.com/xinntao/Real-ESRGAN/releases/download/"
+                "v0.1.0/RealESRGAN_x4plus.pth"),
+            "RealESRNet_x4plus": (
+                "https://github.com/xinntao/Real-ESRGAN/releases/download/"
+                "v0.1.1/RealESRNet_x4plus.pth"),
+        }
+        arch = RRDBNet(num_in_ch=3, num_out_ch=3, num_feat=64,
+                       num_block=23, num_grow_ch=32, scale=4)
+        try:
+            half = str(self.device).startswith("cuda") and torch.cuda.is_available()
+            return RealESRGANer(
+                scale=4,
+                model_path=model_urls.get(self.model_name,
+                                          model_urls["RealESRGAN_x4plus"]),
+                model=arch,
+                tile=self.tile,
+                tile_pad=10,
+                pre_pad=0,
+                half=half,
+                device=self.device,
+            )
+        except Exception as e:
+            if not Upscaler._warned:
+                print(f"[super-res] Could not initialize Real-ESRGAN ({e}); "
+                      f"falling back to classic upscaling.")
+                Upscaler._warned = True
+            self.enabled = False
+            return None
+
+    def enhance(self, bgr):
+        """Return a super-resolved BGR image, or None if SR is unavailable."""
+        if not self.enabled or self._engine is None:
+            return None
+        try:
+            out, _ = self._engine.enhance(bgr, outscale=self.scale)
+            return out
+        except Exception as e:
+            print(f"[super-res] enhance failed ({e}); using classic upscaling.")
+            return None
 
 
 # ===========================================================================
@@ -354,6 +469,8 @@ class Detector:
         # are skipped. 0 disables the check.
         self.min_sharpness = float(get(cfg, "detection.min_sharpness", 0.0))
         self.ignore = {s.lower() for s in get(cfg, "detection.ignore_labels", [])}
+        # Optional AI super-resolution for crops (built once, reused per crop).
+        self.upscaler = Upscaler(cfg)
         self.prompts = load_product_prompts(cfg)   # from file + inline extras
         self.use_builtin = bool(get(cfg, "detection.use_builtin_vocab", True))
 
@@ -422,11 +539,13 @@ class Detector:
 
     def save_crop(self, frame: Frame, det: Detection, crops_dir: str | Path) -> str:
         """
-        Save a high-quality crop:
-          - add a margin around the box so we don't clip the product,
-          - upscale small crops to a minimum size (better for Google Lens),
-          - lightly sharpen,
-          - write as high-quality JPEG or lossless PNG.
+        Save the crop at the best achievable quality. Key principle: you CANNOT
+        recover detail a low-res frame never had, so we:
+          - add a margin so we don't clip the product,
+          - upscale ONLY up to a capped factor (no mushy blow-ups),
+          - use CUBIC interpolation (clean, no ringing),
+          - apply a very mild sharpen only AFTER real upscaling,
+          - save LOSSLESS PNG by default (JPEG re-compression softens crops).
         """
         import cv2
         import numpy as np
@@ -436,7 +555,7 @@ class Detector:
         x1, y1, x2, y2 = det.bbox
 
         # 1) margin (padding) around the detection
-        margin = float(get(self.cfg, "crops.margin_ratio", 0.08))
+        margin = float(get(self.cfg, "crops.margin_ratio", 0.10))
         bw, bh = (x2 - x1), (y2 - y1)
         px, py = int(bw * margin), int(bh * margin)
         x1 = max(0, x1 - px); y1 = max(0, y1 - py)
@@ -446,33 +565,59 @@ class Detector:
             crop = frame.image[max(0, det.bbox[1]):det.bbox[3],
                                max(0, det.bbox[0]):det.bbox[2]]
 
-        # 2) upscale small crops so the shortest side reaches a target
-        min_side = int(get(self.cfg, "crops.min_output_side", 512))
+        min_side = int(get(self.cfg, "crops.min_output_side", 640))
+        max_upscale = float(get(self.cfg, "crops.max_upscale", 3.0))
         h, w = crop.shape[:2]
-        if h and w and min(h, w) < min_side:
-            scale = min_side / float(min(h, w))
-            new_w, new_h = int(round(w * scale)), int(round(h * scale))
-            interp = cv2.INTER_LANCZOS4        # best for upscaling detail
-            crop = cv2.resize(crop, (new_w, new_h), interpolation=interp)
+        did_upscale = False
+        used_sr = False
 
-        # 3) light unsharp-mask sharpening (configurable, off by default if 0)
-        strength = float(get(self.cfg, "crops.sharpen_strength", 0.6))
-        if strength > 0:
-            blur = cv2.GaussianBlur(crop, (0, 0), sigmaX=1.0)
+        # 2a) AI super-resolution (recovers REAL detail). Only run it when the
+        #     crop is actually small enough to benefit, to save GPU time.
+        if getattr(self, "upscaler", None) and self.upscaler.enabled \
+                and h and w and min(h, w) < min_side:
+            sr = self.upscaler.enhance(crop)
+            if sr is not None:
+                crop = sr
+                used_sr = True
+                # Real-ESRGAN gives a fixed x4; scale back down to the target so
+                # we don't store needlessly huge files.
+                h2, w2 = crop.shape[:2]
+                if min(h2, w2) > min_side:
+                    s = min_side / float(min(h2, w2))
+                    crop = cv2.resize(crop, (int(round(w2 * s)), int(round(h2 * s))),
+                                      interpolation=cv2.INTER_AREA)
+
+        # 2b) classic upscale fallback (no SR), capped so we don't create mush.
+        if not used_sr:
+            h, w = crop.shape[:2]
+            if h and w and min(h, w) < min_side:
+                scale = min(min_side / float(min(h, w)), max_upscale)
+                if scale > 1.01:
+                    new_w, new_h = int(round(w * scale)), int(round(h * scale))
+                    crop = cv2.resize(crop, (new_w, new_h),
+                                      interpolation=cv2.INTER_CUBIC)
+                    did_upscale = True
+
+        # 3) mild unsharp-mask. Skip it when SR was used (SR already sharp);
+        #    only apply after a classic upscale, and keep it gentle.
+        strength = float(get(self.cfg, "crops.sharpen_strength", 0.35))
+        if did_upscale and not used_sr and strength > 0:
+            blur = cv2.GaussianBlur(crop, (0, 0), sigmaX=1.2)
             crop = cv2.addWeighted(crop, 1 + strength, blur, -strength, 0)
             crop = np.clip(crop, 0, 255).astype("uint8")
 
-        # 4) write with high quality
-        fmt = str(get(self.cfg, "crops.format", "jpg")).lower()
+        # 4) write. PNG (lossless) by default so we don't add JPEG blur.
+        fmt = str(get(self.cfg, "crops.format", "png")).lower()
         if fmt == "png":
             fname = f"f{det.frame_index:07d}_{slugify(det.label)}_{x1}-{y1}.png"
             path = str(Path(crops_dir) / fname)
             cv2.imwrite(path, crop, [cv2.IMWRITE_PNG_COMPRESSION, 1])
         else:
-            quality = int(get(self.cfg, "crops.jpeg_quality", 95))
+            quality = int(get(self.cfg, "crops.jpeg_quality", 98))
             fname = f"f{det.frame_index:07d}_{slugify(det.label)}_{x1}-{y1}.jpg"
             path = str(Path(crops_dir) / fname)
-            cv2.imwrite(path, crop, [cv2.IMWRITE_JPEG_QUALITY, quality])
+            cv2.imwrite(path, crop, [cv2.IMWRITE_JPEG_QUALITY, quality,
+                                     cv2.IMWRITE_JPEG_OPTIMIZE, 1])
 
         det.crop_path = path
         return path
@@ -888,9 +1033,18 @@ class S3Uploader:
             return ""
         from botocore.exceptions import ClientError
 
-        suffix = key_suffix or Path(local_path).name
+        # Derive the key from the requested suffix but force the REAL extension
+        # of the local file, so a PNG crop is not served as .jpg (which softens
+        # / mis-decodes it for viewers and Google Lens).
+        real_ext = Path(local_path).suffix.lower() or ".png"
+        if key_suffix:
+            suffix = str(Path(key_suffix).with_suffix(real_ext))
+        else:
+            suffix = Path(local_path).name
         key = f"{self.prefix}/{suffix}"
-        extra = {"ContentType": "image/jpeg"}
+        content_types = {".png": "image/png", ".jpg": "image/jpeg",
+                         ".jpeg": "image/jpeg", ".webp": "image/webp"}
+        extra = {"ContentType": content_types.get(real_ext, "application/octet-stream")}
 
         # Try a public ACL only if requested and we haven't already learned it's
         # disabled on this bucket. Fall back cleanly to a private upload.
