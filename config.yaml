@@ -94,7 +94,30 @@ detection:
     - "arm"
 
   # Minimum crop size in pixels (w and h). Tiny detections are usually noise.
-  min_crop_size: 40
+  # Raise this (e.g. 64-96) to drop small, low-detail detections.
+  min_crop_size: 48
+
+  # Reject motion-blurred detections by Laplacian-variance sharpness.
+  # 0 = disabled. Typical usable values: 60-150 (higher = stricter).
+  # Start around 80 if your video has a lot of motion blur.
+  min_sharpness: 0.0
+
+# --------------------------------------------------------------------------
+# CROPS: quality of the saved product images (fed to Google Lens).
+# Better crops => far better recommendation matches.
+# --------------------------------------------------------------------------
+crops:
+  # Padding added around each detection box, as a fraction of box size.
+  margin_ratio: 0.08
+  # Upscale small crops so the shortest side reaches this many pixels.
+  # Google Lens matches best on reasonably large, sharp images.
+  min_output_side: 512
+  # Unsharp-mask sharpening strength (0 = off, 0.4-0.8 = mild, >1 = strong).
+  sharpen_strength: 0.6
+  # Output format: "jpg" (small) or "png" (lossless, bigger).
+  format: "jpg"
+  # JPEG quality when format == "jpg" (1-100). 95 keeps detail.
+  jpeg_quality: 95
 
 # --------------------------------------------------------------------------
 # DEDUP: collapse the same physical product seen across many frames into ONE.
@@ -106,8 +129,9 @@ dedup:
   device: "cuda:0"
   # Two crops with cosine similarity >= this are considered the SAME product.
   same_product_similarity: 0.92
-  # Keep the sharpest / largest crop as the representative image of each product.
-  representative: "largest"   # "largest" | "sharpest"
+  # Representative crop per product. "sharpest" picks the least-blurry crop
+  # (best for Google Lens matching); "largest" picks the biggest box.
+  representative: "sharpest"   # "largest" | "sharpest"
 
 # --------------------------------------------------------------------------
 # MATCHING: find the EXACT product on real ecommerce sites.
@@ -116,31 +140,36 @@ dedup:
 # --------------------------------------------------------------------------
 matching:
   # THE "90%" the user asked for. Only keep recommendations at/above this score.
-  # Range 0.0 - 1.0. Set to 0.90 for a 90% match requirement.
+  # Range 0.0 - 1.0.
+  # NOTE: Google Lens does NOT return a numeric similarity, so this score is a
+  # proxy derived from which Lens section a result came from + its rank
+  # (exact_matches ~0.98, products ~0.95, visual_matches ~0.93). If you get
+  # EMPTY recommendations, this threshold is the most common cause - lower it
+  # to ~0.90 (default) or 0.85 to keep more.
   min_match_score: 0.90
 
   # Max recommended products to keep per detected item.
   max_results_per_product: 5
 
-  # Restrict recommendations to these trusted ecommerce domains (empty = all).
-  trusted_domains:
-    - "amazon."
-    - "ebay."
-    - "walmart."
-    - "flipkart."
-    - "myntra."
-    - "target.com"
-    - "bestbuy.com"
-    - "aliexpress."
-    - "etsy.com"
-    - "nike.com"
-    - "adidas."
+  # Restrict recommendations to these trusted ecommerce domains.
+  # LEAVE EMPTY ([]) to accept results from ANY site - do this first if you are
+  # getting empty recommendations, then re-add domains once matches appear.
+  trusted_domains: []
+  # Example of a restricted list (uncomment to use):
+  #   - "amazon."
+  #   - "ebay."
+  #   - "walmart."
+  #   - "flipkart."
+  #   - "myntra."
+  #   - "aliexpress."
+  #   - "etsy.com"
 
   # --- Google Lens (via SerpApi) settings ---
   serpapi:
-    # Which Lens tab to read. "exact_matches" gives the SAME product;
-    # "products" gives shoppable matches; "visual_matches" gives look-alikes.
-    lens_type: "exact_matches"   # exact_matches | products | visual_matches | all
+    # Which Lens tab to read. "all" pulls exact + products + visual matches,
+    # which maximizes the chance of a match. Narrow to "exact_matches" only if
+    # you want strictly the same product.
+    lens_type: "all"   # all | exact_matches | products | visual_matches
     country: "us"
     language: "en"
 

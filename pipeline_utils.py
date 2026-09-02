@@ -350,6 +350,9 @@ class Detector:
         self.conf = float(get(cfg, "detection.confidence_threshold", 0.35))
         self.iou = float(get(cfg, "detection.iou_threshold", 0.50))
         self.min_crop = int(get(cfg, "detection.min_crop_size", 40))
+        # Minimum Laplacian-variance sharpness; detections below this (blurry)
+        # are skipped. 0 disables the check.
+        self.min_sharpness = float(get(cfg, "detection.min_sharpness", 0.0))
         self.ignore = {s.lower() for s in get(cfg, "detection.ignore_labels", [])}
         self.prompts = load_product_prompts(cfg)   # from file + inline extras
         self.use_builtin = bool(get(cfg, "detection.use_builtin_vocab", True))
@@ -400,20 +403,77 @@ class Detector:
             x1, y1, x2, y2 = (int(v) for v in b.xyxy[0].tolist())
             if (x2 - x1) < self.min_crop or (y2 - y1) < self.min_crop:
                 continue
+            # Reject motion-blurred detections (low Laplacian variance).
+            if self.min_sharpness > 0:
+                region = frame.image[max(0, y1):y2, max(0, x1):x2]
+                if region.size == 0 or self._sharpness(region) < self.min_sharpness:
+                    continue
             dets.append(Detection(
                 frame_index=frame.index, timestamp=frame.timestamp,
                 label=label, confidence=conf, bbox=(x1, y1, x2, y2),
             ))
         return dets
 
-    def save_crop(self, frame: Frame, det: Detection, crops_dir: str | Path) -> str:
+    @staticmethod
+    def _sharpness(bgr) -> float:
         import cv2
+        gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+        return float(cv2.Laplacian(gray, cv2.CV_64F).var())
+
+    def save_crop(self, frame: Frame, det: Detection, crops_dir: str | Path) -> str:
+        """
+        Save a high-quality crop:
+          - add a margin around the box so we don't clip the product,
+          - upscale small crops to a minimum size (better for Google Lens),
+          - lightly sharpen,
+          - write as high-quality JPEG or lossless PNG.
+        """
+        import cv2
+        import numpy as np
+
         crops_dir = ensure_dir(crops_dir)
+        H, W = frame.image.shape[:2]
         x1, y1, x2, y2 = det.bbox
-        crop = frame.image[max(0, y1):y2, max(0, x1):x2]
-        fname = f"f{det.frame_index:07d}_{slugify(det.label)}_{x1}-{y1}.jpg"
-        path = str(Path(crops_dir) / fname)
-        cv2.imwrite(path, crop)
+
+        # 1) margin (padding) around the detection
+        margin = float(get(self.cfg, "crops.margin_ratio", 0.08))
+        bw, bh = (x2 - x1), (y2 - y1)
+        px, py = int(bw * margin), int(bh * margin)
+        x1 = max(0, x1 - px); y1 = max(0, y1 - py)
+        x2 = min(W, x2 + px); y2 = min(H, y2 + py)
+        crop = frame.image[y1:y2, x1:x2]
+        if crop.size == 0:
+            crop = frame.image[max(0, det.bbox[1]):det.bbox[3],
+                               max(0, det.bbox[0]):det.bbox[2]]
+
+        # 2) upscale small crops so the shortest side reaches a target
+        min_side = int(get(self.cfg, "crops.min_output_side", 512))
+        h, w = crop.shape[:2]
+        if h and w and min(h, w) < min_side:
+            scale = min_side / float(min(h, w))
+            new_w, new_h = int(round(w * scale)), int(round(h * scale))
+            interp = cv2.INTER_LANCZOS4        # best for upscaling detail
+            crop = cv2.resize(crop, (new_w, new_h), interpolation=interp)
+
+        # 3) light unsharp-mask sharpening (configurable, off by default if 0)
+        strength = float(get(self.cfg, "crops.sharpen_strength", 0.6))
+        if strength > 0:
+            blur = cv2.GaussianBlur(crop, (0, 0), sigmaX=1.0)
+            crop = cv2.addWeighted(crop, 1 + strength, blur, -strength, 0)
+            crop = np.clip(crop, 0, 255).astype("uint8")
+
+        # 4) write with high quality
+        fmt = str(get(self.cfg, "crops.format", "jpg")).lower()
+        if fmt == "png":
+            fname = f"f{det.frame_index:07d}_{slugify(det.label)}_{x1}-{y1}.png"
+            path = str(Path(crops_dir) / fname)
+            cv2.imwrite(path, crop, [cv2.IMWRITE_PNG_COMPRESSION, 1])
+        else:
+            quality = int(get(self.cfg, "crops.jpeg_quality", 95))
+            fname = f"f{det.frame_index:07d}_{slugify(det.label)}_{x1}-{y1}.jpg"
+            path = str(Path(crops_dir) / fname)
+            cv2.imwrite(path, crop, [cv2.IMWRITE_JPEG_QUALITY, quality])
+
         det.crop_path = path
         return path
 
@@ -616,14 +676,30 @@ class Matcher:
     def _domain_ok(self, source: str, url: str) -> bool:
         if not self.trusted:
             return True
+        # Compare against both the raw source/url and the extracted hostname,
+        # since SerpApi 'link' can be a google redirect and 'source' a name.
         hay = f"{source} {url}".lower()
-        return any(t in hay for t in self.trusted)
+        host = ""
+        try:
+            host = urllib.parse.urlparse(url).netloc.lower()
+        except Exception:
+            pass
+        hay = f"{hay} {host}"
+        return any(t.strip(".").lower() in hay for t in self.trusted)
 
-    def _finalize(self, recs: list[Recommendation]) -> list[Recommendation]:
-        recs = [r for r in recs if r.score >= self.min_score
-                and self._domain_ok(r.source or "", r.url or "")]
-        recs.sort(key=lambda r: r.score, reverse=True)
-        return recs[: self.max_results]
+    def _finalize(self, recs: list[Recommendation], verbose: bool = True) -> list[Recommendation]:
+        n_raw = len(recs)
+        after_score = [r for r in recs if r.score >= self.min_score]
+        after_domain = [r for r in after_score
+                        if self._domain_ok(r.source or "", r.url or "")]
+        after_domain.sort(key=lambda r: r.score, reverse=True)
+        result = after_domain[: self.max_results]
+        if verbose and n_raw and not result:
+            print(f"   [match] {n_raw} raw results -> {len(after_score)} passed "
+                  f"score>={self.min_score} -> {len(after_domain)} passed domain "
+                  f"filter. Nothing kept. Lower matching.min_match_score or clear "
+                  f"matching.trusted_domains to loosen.")
+        return result
 
     # -- public entry point ------------------------------------------------
     def match(self, product: Product, image_url: Optional[str] = None) -> list[Recommendation]:
@@ -669,43 +745,64 @@ class Matcher:
                                 self.cfg, what="serpapi google_lens")
             self.cache.put(image_path, extra, data)
 
-        # SerpApi returns exact_matches / visual_matches / products_results.
-        items = (data.get("exact_matches")
-                 or data.get("visual_matches")
-                 or data.get("products_results")
-                 or [])
+        if data.get("error"):
+            print(f"   [match] SerpApi error: {data['error']}")
+            return []
+
+        # Collect results from every relevant section Google Lens can return,
+        # tagging each with the section it came from (drives the score).
         recs: list[Recommendation] = []
-        for it in items:
-            price = None
-            if isinstance(it.get("price"), dict):
-                price = it["price"].get("value") or it["price"].get("extracted_value")
-            elif it.get("price"):
-                price = str(it.get("price"))
-            # SerpApi does not always give a numeric similarity; exact_matches
-            # are treated as high-confidence, ranked by position.
-            pos = it.get("position", 1)
-            score = _serpapi_score(lens_type, pos, len(items))
-            recs.append(Recommendation(
-                title=it.get("title", ""),
-                url=it.get("link", ""),
-                source=it.get("source", "") or it.get("displayed_link", ""),
-                price=price,
-                thumbnail=it.get("thumbnail"),
-                score=score,
-                backend="serpapi",
-            ))
-        return recs
+        sections = [
+            ("exact_matches", data.get("exact_matches") or []),
+            ("products", data.get("products_results")
+                or data.get("shopping_results") or []),
+            ("visual_matches", data.get("visual_matches") or []),
+        ]
+        for section, items in sections:
+            for it in items:
+                price = None
+                if isinstance(it.get("price"), dict):
+                    price = (it["price"].get("value")
+                             or it["price"].get("extracted_value"))
+                elif it.get("price"):
+                    price = str(it.get("price"))
+                pos = it.get("position", 1)
+                score = _serpapi_score(section, pos)
+                recs.append(Recommendation(
+                    title=it.get("title", ""),
+                    url=it.get("link", "") or it.get("source_url", ""),
+                    source=it.get("source", "") or it.get("displayed_link", ""),
+                    price=price,
+                    thumbnail=it.get("thumbnail"),
+                    score=score,
+                    backend="serpapi",
+                ))
+
+        # De-duplicate by URL, keeping the highest score.
+        best: dict[str, Recommendation] = {}
+        for r in recs:
+            key = r.url or r.title
+            if key and (key not in best or r.score > best[key].score):
+                best[key] = r
+        out = list(best.values())
+        if not out:
+            print(f"   [match] Google Lens returned no matches for this image. "
+                  f"If the crop is blurry/tiny or the S3 URL is not reachable, "
+                  f"Lens can't match it.")
+        return out
 
 
-def _serpapi_score(lens_type: str, position: int, n: int) -> float:
+def _serpapi_score(section: str, position: int) -> float:
     """
-    Map SerpApi rank -> a 0..1 confidence proxy.
-    exact_matches are inherently the same product, so they start high (0.97)
-    and decay slightly with rank. visual_matches start lower (look-alikes).
+    Map a Google Lens result section + rank -> a 0..1 confidence proxy.
+    exact_matches are the SAME product (highest). products are shoppable
+    matches. visual_matches are look-alikes but still often the right product,
+    so they start high enough to survive a reasonable threshold. Rank decays
+    gently so deep results still stay above a 0.90 cutoff for the first several.
     """
-    base = {"exact_matches": 0.97, "products": 0.93, "visual_matches": 0.85}.get(
-        lens_type, 0.90)
-    decay = 0.01 * max(0, position - 1)
+    base = {"exact_matches": 0.98, "products": 0.95, "visual_matches": 0.93}.get(
+        section, 0.92)
+    decay = 0.005 * max(0, position - 1)
     return max(0.0, round(base - decay, 4))
 
 
