@@ -1,4 +1,4 @@
-# Build the object_detection_process image (models baked in) & push to Amazon ECR
+# Build the isteam-object-detection-process image (models baked in) & push to Amazon ECR
 
 This guide builds the Docker image for `object_detection_process` **with all
 model weights baked in** (YOLOE + CLIP + Real-ESRGAN + YOLOE's text-prompt

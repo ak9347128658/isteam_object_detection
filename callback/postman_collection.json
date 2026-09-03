@@ -1,0 +1,59 @@
+{
+  "info": {
+    "name": "iSteam Object Detection - Callback",
+    "description": "Test calls for the callback Lambda (behind API Gateway). Set the {{base_url}} and {{route}} collection variables, then Send. The Lambda just returns 200 and logs the payload to CloudWatch: /aws/lambda/isteam-object-detection-process-callback-lambda",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://f9u39iuej4.execute-api.us-east-1.amazonaws.com/default/isteam-object-detection-process-callback-lambda",
+      "type": "string"
+    },
+    {
+      "key": "route",
+      "value": "/callback",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Callback - completed",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{route}}",
+          "host": ["{{base_url}}{{route}}"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"job_id\": \"test-123\",\n  \"status\": \"completed\",\n  \"video_s3_uri\": \"s3://isteam-video-input/uploads/clip.mp4\",\n  \"unique_suffix\": \"clip-test123-20260903T100200Z\",\n  \"product_count\": 3,\n  \"detections_json_s3_uri\": \"s3://isteam-video-output/detections/clip-test123-20260903T100200Z/detections.json\",\n  \"detections_vtt_s3_uri\": \"s3://isteam-video-output/detections/clip-test123-20260903T100200Z/detections.vtt\",\n  \"detections_json_url\": \"https://example-presigned-url/detections.json\",\n  \"detections_vtt_url\": \"https://example-presigned-url/detections.vtt\",\n  \"finished_at\": \"2026-09-03T10:02:00Z\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Simulates a successful detection callback."
+      }
+    },
+    {
+      "name": "Callback - failed",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{route}}",
+          "host": ["{{base_url}}{{route}}"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"job_id\": \"test-456\",\n  \"status\": \"failed\",\n  \"video_s3_uri\": \"s3://isteam-video-input/uploads/broken.mp4\",\n  \"error\": \"No frames sampled - check the video / time window settings.\",\n  \"finished_at\": \"2026-09-03T10:05:00Z\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Simulates a failed detection callback."
+      }
+    }
+  ]
+}
