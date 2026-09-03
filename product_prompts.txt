@@ -408,3 +408,2116 @@ hammer
 wrench
 tool box
 flashlight
+
+# ===========================================================================
+# EXTENDED CATALOG (expanded product vocabulary)
+# One concrete, singular product name per line.
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# WATCHES & JEWELRY (extended)
+# ---------------------------------------------------------------------------
+chronograph watch
+dive watch
+field watch
+pilot watch
+dress watch
+sport watch
+gold watch
+silver watch
+rose gold watch
+titanium watch
+ceramic watch
+leather strap watch
+metal band watch
+rubber strap watch
+skeleton watch
+automatic watch
+mechanical watch
+quartz watch
+solar watch
+gps watch
+hybrid smartwatch
+fitness smartwatch
+kids watch
+women's watch
+men's watch
+luxury watch
+watch box
+watch winder
+watch strap
+watch band
+signet ring
+wedding band
+cocktail ring
+stackable ring
+class ring
+promise ring
+eternity ring
+tennis bracelet
+charm bracelet
+cuff bracelet
+beaded bracelet
+link bracelet
+chain necklace
+pearl necklace
+locket necklace
+statement necklace
+layered necklace
+drop earrings
+dangle earrings
+chandelier earrings
+huggie earrings
+ear cuff
+gold chain
+silver chain
+pendant chain
+body chain
+nose ring
+toe ring
+jewelry box
+ring holder
+watch case
+
+# ---------------------------------------------------------------------------
+# BAGS & LUGGAGE (extended)
+# ---------------------------------------------------------------------------
+satchel
+hobo bag
+bucket bag
+saddle bag
+baguette bag
+top handle bag
+sling bag
+belt bag
+coin purse
+card holder
+passport holder
+travel wallet
+money clip
+weekender bag
+garment bag
+rolling suitcase
+hardside suitcase
+softside suitcase
+spinner luggage
+carry-on backpack
+travel backpack
+hiking backpack
+daypack
+rucksack
+school backpack
+kids backpack
+mini backpack
+sling backpack
+laptop bag
+camera bag
+lunch bag
+cooler bag
+insulated bag
+beach bag
+shopping bag
+canvas tote
+straw bag
+evening bag
+makeup bag
+toiletry bag
+cosmetic pouch
+pencil case
+storage pouch
+packing cube
+luggage tag
+duffle backpack
+rolling duffel
+trolley bag
+laptop sleeve
+
+# ---------------------------------------------------------------------------
+# FOOTWEAR (extended)
+# ---------------------------------------------------------------------------
+canvas sneaker
+slip-on sneaker
+high-top sneaker
+low-top sneaker
+tennis shoe
+walking shoe
+trail running shoe
+cross training shoe
+skate shoe
+oxford shoe
+derby shoe
+brogue shoe
+monk strap shoe
+moccasin
+boat shoe
+driving shoe
+work boot
+combat boot
+cowboy boot
+riding boot
+knee-high boot
+over-the-knee boot
+snow boot
+duck boot
+platform boot
+wedge boot
+gladiator sandal
+slide sandal
+flip flop sandal
+sport sandal
+strappy sandal
+platform sandal
+mule
+clog
+kitten heel
+block heel
+pump
+peep-toe heel
+ankle strap heel
+mary jane
+loafer flat
+d'orsay flat
+water shoe
+house slipper
+memory foam slipper
+slipper boot
+shoe insole
+shoe laces
+shoe horn
+
+# ---------------------------------------------------------------------------
+# CLOTHING - TOPS (extended)
+# ---------------------------------------------------------------------------
+long sleeve shirt
+short sleeve shirt
+button-down shirt
+oxford shirt
+linen shirt
+graphic t-shirt
+v-neck t-shirt
+crew neck t-shirt
+pocket t-shirt
+henley shirt
+raglan shirt
+peplum top
+wrap top
+halter top
+tube top
+camisole
+bodysuit
+bustier
+corset top
+off-shoulder top
+cold shoulder top
+peasant top
+smock top
+tunic
+kaftan
+knit top
+ribbed top
+mesh top
+lace top
+sequin top
+zip-up hoodie
+pullover hoodie
+graphic hoodie
+crewneck sweatshirt
+quarter-zip pullover
+fleece pullover
+knit sweater
+cable knit sweater
+v-neck sweater
+crewneck sweater
+mock neck sweater
+oversized sweater
+sweater vest
+polo sweater
+
+# ---------------------------------------------------------------------------
+# CLOTHING - OUTERWEAR (extended)
+# ---------------------------------------------------------------------------
+field jacket
+harrington jacket
+varsity jacket
+track jacket
+utility jacket
+shirt jacket
+shacket
+quilted jacket
+down jacket
+softshell jacket
+hardshell jacket
+ski jacket
+snowboard jacket
+fleece jacket
+sherpa jacket
+corduroy jacket
+tweed jacket
+double-breasted coat
+single-breasted coat
+peacoat
+duffle coat
+wool coat
+cashmere coat
+faux fur coat
+teddy coat
+wrap coat
+cape coat
+anorak
+gilet
+puffer vest
+fleece vest
+rain jacket
+packable jacket
+
+# ---------------------------------------------------------------------------
+# CLOTHING - BOTTOMS & DRESSES (extended)
+# ---------------------------------------------------------------------------
+skinny jeans
+straight leg jeans
+bootcut jeans
+flare jeans
+wide leg jeans
+mom jeans
+boyfriend jeans
+distressed jeans
+high-waisted jeans
+low-rise jeans
+dress pants
+dress trousers
+pleated trousers
+wide leg pants
+tapered pants
+capri pants
+palazzo pants
+paper bag pants
+track pants
+sweatpants
+harem pants
+linen pants
+corduroy pants
+denim shorts
+cargo shorts
+bermuda shorts
+bike shorts
+board shorts
+running shorts
+pleated skirt
+pencil skirt
+a-line skirt
+wrap skirt
+denim skirt
+midi skirt
+maxi skirt
+tulle skirt
+tennis skirt
+skort
+capri leggings
+high-waist leggings
+yoga leggings
+shift dress
+sheath dress
+bodycon dress
+wrap dress
+slip dress
+sundress
+shirt dress
+sweater dress
+midi dress
+mini dress
+skater dress
+fit and flare dress
+tea dress
+bardot dress
+prom dress
+evening gown
+ball gown
+wedding dress
+bridesmaid dress
+denim overalls
+pinafore dress
+playsuit
+
+# ---------------------------------------------------------------------------
+# CLOTHING - INTIMATES & SLEEPWEAR
+# ---------------------------------------------------------------------------
+bra
+sports bra
+push-up bra
+bralette
+underwear
+boxer briefs
+boxers
+briefs
+thong
+panties
+lingerie set
+camisole set
+nightgown
+nightdress
+pajama set
+sleep shirt
+robe
+bathrobe
+kimono robe
+shapewear
+bodysuit shaper
+slip
+undershirt
+thermal underwear
+long johns
+compression shorts
+tights
+pantyhose
+
+# ---------------------------------------------------------------------------
+# HEADWEAR & ACCESSORIES (extended)
+# ---------------------------------------------------------------------------
+snapback cap
+trucker cap
+dad hat
+flat cap
+newsboy cap
+cowboy hat
+panama hat
+straw hat
+boater hat
+beret
+balaclava
+earmuffs
+knit scarf
+silk scarf
+infinity scarf
+pashmina
+shawl
+bandana
+neck gaiter
+leather belt
+canvas belt
+braided belt
+chain belt
+suspenders
+pocket square
+neck tie
+skinny tie
+knit tie
+leather gloves
+wool gloves
+touchscreen gloves
+driving gloves
+winter gloves
+compression socks
+ankle socks
+crew socks
+no-show socks
+wool socks
+dress socks
+knee-high socks
+thigh-high socks
+aviator sunglasses
+wayfarer sunglasses
+cat-eye sunglasses
+round sunglasses
+sport sunglasses
+polarized sunglasses
+blue light glasses
+safety glasses
+ski goggles
+swimming goggles
+compact umbrella
+golf umbrella
+patio umbrella
+hair clip
+hair tie
+scrunchie
+bobby pin
+hair claw
+
+# ---------------------------------------------------------------------------
+# ELECTRONICS - PERSONAL (extended)
+# ---------------------------------------------------------------------------
+android phone
+iphone
+foldable phone
+gaming phone
+budget smartphone
+flagship smartphone
+tablet computer
+graphics tablet
+drawing tablet
+e-ink tablet
+ultrabook
+gaming laptop
+2-in-1 laptop
+chromebook
+netbook
+macbook
+mechanical keyboard
+wireless keyboard
+ergonomic keyboard
+gaming keyboard
+membrane keyboard
+wireless mouse
+gaming mouse
+ergonomic mouse
+trackball mouse
+mouse pad
+wrist rest
+noise cancelling headphones
+wireless headphones
+gaming headset
+studio headphones
+bone conduction headphones
+in-ear monitors
+true wireless earbuds
+sports earbuds
+neckband earphones
+wired earphones
+instant camera
+film camera
+compact camera
+bridge camera
+360 camera
+camera lens
+tripod
+camera flash
+gimbal stabilizer
+selfie stick
+memory card
+sd card
+microsd card
+wireless charger
+fast charger
+car charger
+charging dock
+charging cable
+usb-c cable
+lightning cable
+hdmi cable
+external ssd
+external hard drive
+portable ssd
+nas drive
+graphics card
+processor
+motherboard
+ram module
+cpu cooler
+power supply unit
+computer case
+smart ring
+smart glasses
+handheld console
+retro game console
+gaming handheld
+stylus pen
+digital pen
+laptop stand
+phone stand
+tablet stand
+ring light
+capture card
+
+# ---------------------------------------------------------------------------
+# ELECTRONICS - HOME (extended)
+# ---------------------------------------------------------------------------
+smart tv
+oled tv
+qled tv
+led tv
+4k tv
+8k tv
+projector screen
+mini projector
+home theater system
+av receiver
+bookshelf speaker
+floor standing speaker
+subwoofer
+portable speaker
+waterproof speaker
+party speaker
+smart display
+voice assistant speaker
+wifi router
+mesh router
+wifi extender
+network switch
+modem
+streaming stick
+streaming box
+set-top box
+game console controller
+wireless controller
+racing wheel
+flight stick
+inkjet printer
+laser printer
+photo printer
+3d printer
+all-in-one printer
+document scanner
+photo scanner
+label printer
+uninterruptible power supply
+surge protector
+power strip
+extension cord
+
+# ---------------------------------------------------------------------------
+# HOME APPLIANCES (extended)
+# ---------------------------------------------------------------------------
+countertop microwave
+convection oven
+toaster oven
+wall oven
+gas range
+electric range
+induction cooktop
+gas cooktop
+french door refrigerator
+side-by-side refrigerator
+top freezer refrigerator
+mini fridge
+wine cooler
+chest freezer
+upright freezer
+built-in dishwasher
+portable dishwasher
+front load washer
+top load washer
+washer dryer combo
+tumble dryer
+portable air conditioner
+window air conditioner
+split air conditioner
+tower fan
+pedestal fan
+ceiling fan
+bladeless fan
+box fan
+space heater
+oil heater
+infrared heater
+patio heater
+tower air purifier
+hepa air purifier
+cool mist humidifier
+warm mist humidifier
+ultrasonic humidifier
+dehumidifier
+upright vacuum
+canister vacuum
+stick vacuum
+cordless vacuum
+handheld vacuum
+wet dry vacuum
+robot mop
+carpet cleaner
+steam mop
+countertop blender
+immersion blender
+personal blender
+hand mixer
+stand mixer
+food chopper
+juicer
+citrus juicer
+drip coffee maker
+pod coffee maker
+french press
+pour over coffee maker
+cold brew maker
+milk frother
+electric kettle gooseneck
+pop-up toaster
+long slot toaster
+waffle maker
+sandwich maker
+electric griddle
+rice cooker multi
+instant pot
+air fryer oven
+deep fryer
+slow cooker large
+sous vide cooker
+bread maker
+ice cream maker
+electric grill
+indoor grill
+panini press
+food dehydrator
+garment steamer
+clothes iron
+steam iron
+ironing board
+electric fan heater
+
+# ---------------------------------------------------------------------------
+# KITCHEN & DINING (extended)
+# ---------------------------------------------------------------------------
+travel mug
+insulated tumbler
+coffee cup
+espresso cup
+tea cup
+mason jar
+pint glass
+tumbler glass
+champagne flute
+whiskey glass
+cocktail glass
+water pitcher
+carafe
+insulated water bottle
+sports water bottle
+glass water bottle
+protein shaker bottle
+vacuum flask
+dinner plate
+salad plate
+serving platter
+soup bowl
+cereal bowl
+mixing bowl
+serving bowl
+ramen bowl
+saucepan
+stock pot
+dutch oven
+cast iron skillet
+nonstick pan
+grill pan
+wok
+crepe pan
+roasting pan
+baking sheet
+cake pan
+muffin tin
+loaf pan
+pie dish
+casserole dish
+chef knife
+paring knife
+bread knife
+santoku knife
+utility knife
+steak knife
+carving knife
+cleaver
+knife block
+knife sharpener
+cutting board bamboo
+dinner fork
+salad fork
+soup spoon
+teaspoon
+tablespoon spoon
+serving spoon
+ladle
+spatula
+slotted spoon
+whisk
+tongs
+peeler
+grater
+colander
+strainer
+measuring cup
+measuring spoon
+mixing spoon
+rolling pin
+can opener
+bottle opener
+corkscrew
+garlic press
+salad spinner
+food storage container
+glass container
+bento box
+spice rack
+dish rack
+utensil holder
+napkin holder
+tea kettle stovetop
+coffee grinder
+electric spice grinder
+oven mitt
+pot holder
+trivet
+serving tray
+lazy susan
+
+# ---------------------------------------------------------------------------
+# FURNITURE (extended)
+# ---------------------------------------------------------------------------
+accent chair
+gaming chair
+folding chair
+rocking chair
+bar stool
+counter stool
+wingback chair
+club chair
+papasan chair
+bean bag chair
+loveseat
+sectional sofa
+sleeper sofa
+futon
+chesterfield sofa
+chaise lounge
+console table
+end table
+side table
+nesting table
+folding table
+computer desk
+standing desk
+writing desk
+corner desk
+gaming desk
+l-shaped desk
+floating shelf
+ladder shelf
+corner shelf
+cube shelf
+etagere
+china cabinet
+display cabinet
+sideboard
+buffet cabinet
+tv console
+chest of drawers
+lingerie chest
+armoire
+wardrobe closet
+platform bed
+bunk bed
+loft bed
+canopy bed
+daybed
+murphy bed
+adjustable bed frame
+headboard
+memory foam mattress
+hybrid mattress
+innerspring mattress
+latex mattress
+mattress topper
+box spring
+bed frame
+bedside table
+vanity table
+makeup vanity
+storage bench
+entryway bench
+shoe cabinet
+coat rack
+hall tree
+bookcase
+filing cabinet
+storage ottoman
+folding step stool
+kitchen island cart
+bar cart
+office desk chair
+
+# ---------------------------------------------------------------------------
+# HOME DECOR & LIGHTING (extended)
+# ---------------------------------------------------------------------------
+pendant light
+track lighting
+recessed light
+wall sconce
+picture light
+string lights
+fairy lights
+led strip light
+salt lamp
+lava lamp
+night light
+reading lamp
+tripod floor lamp
+arc floor lamp
+task lamp
+smart bulb
+led bulb
+edison bulb
+lamp shade
+full length mirror
+wall mirror
+vanity mirror
+makeup mirror
+decorative mirror
+digital clock
+cuckoo clock
+mantel clock
+grandfather clock
+wall calendar
+photo frame
+collage frame
+canvas print
+framed poster
+wall tapestry
+metal wall art
+floating wall shelf
+decorative vase
+ceramic vase
+glass vase
+flower pot
+plant stand
+hanging planter
+terrarium
+scented candle
+pillar candle
+tea light candle
+candle holder
+candlestick
+incense holder
+diffuser
+essential oil diffuser
+area rug
+runner rug
+round rug
+outdoor rug
+door mat
+sheepskin rug
+blackout curtain
+sheer curtain
+curtain rod
+window blind
+roman shade
+throw pillow
+decorative cushion
+floor cushion
+lumbar pillow
+fleece blanket
+knit throw
+weighted blanket
+duvet cover
+comforter
+quilt
+bed sheet set
+pillowcase
+mattress protector
+bath towel
+hand towel
+bath mat
+shower curtain
+wall clock large
+faux plant
+artificial flower
+wreath
+figurine
+bookend
+storage basket
+woven basket
+magazine rack
+tissue box cover
+
+# ---------------------------------------------------------------------------
+# BEAUTY & PERSONAL CARE (extended)
+# ---------------------------------------------------------------------------
+eau de parfum
+eau de toilette
+body mist
+solid perfume
+lip gloss
+lip liner
+lip balm
+lipstick matte
+liquid lipstick
+tinted lip balm
+nail polish set
+gel nail polish
+nail file
+cuticle oil
+eyeshadow palette
+blush palette
+bronzer
+highlighter makeup
+setting powder
+loose powder
+pressed powder
+liquid foundation
+cushion foundation
+bb cream
+cc cream
+concealer
+color corrector
+primer makeup
+setting spray
+liquid eyeliner
+pencil eyeliner
+gel eyeliner
+kohl pencil
+volumizing mascara
+waterproof mascara
+false eyelashes
+eyebrow pencil
+brow gel
+brow pomade
+makeup brush set
+foundation brush
+blending sponge
+powder brush
+eyeshadow brush
+makeup remover
+micellar water
+face wash
+facial cleanser
+face scrub
+facial toner
+face serum
+vitamin c serum
+hyaluronic acid serum
+retinol serum
+face moisturizer
+night cream
+eye cream
+face mask sheet
+clay mask
+sunscreen lotion
+face sunscreen
+body lotion
+body butter
+hand cream
+foot cream
+body scrub
+body wash
+bar soap
+shower gel
+bubble bath
+bath bomb
+shampoo
+conditioner
+dry shampoo
+hair mask
+leave-in conditioner
+hair serum
+hair oil
+hair gel
+hair wax
+hair pomade
+hairspray
+hair mousse
+hair dryer ionic
+hair straightener flat iron
+curling wand
+hair crimper
+hot air brush
+hair rollers
+detangling brush
+paddle brush
+round brush
+comb
+hair clipper
+beard trimmer
+nose hair trimmer
+body groomer
+electric razor
+safety razor
+cartridge razor
+shaving cream
+shaving brush
+aftershave
+beard oil
+beard balm
+electric toothbrush sonic
+manual toothbrush
+water flosser
+tongue scraper
+teeth whitening kit
+mouthwash
+cotton pads
+cotton swabs
+tweezers
+nail clippers
+manicure set
+epilator
+facial steamer
+jade roller
+gua sha
+led face mask
+foot spa
+massage gun
+back massager
+facial cleansing brush
+
+# ---------------------------------------------------------------------------
+# SPORTS, FITNESS & OUTDOORS (extended)
+# ---------------------------------------------------------------------------
+mountain bike
+road bike
+hybrid bike
+electric bike
+folding bike
+bmx bike
+kids bicycle
+tricycle
+bike helmet
+cycling gloves
+bike lock
+bike pump
+water bottle cage
+bike light
+bike computer
+electric scooter
+kick scooter
+skateboard deck
+longboard
+penny board
+roller skates
+inline skates
+ice skates
+tennis racquet
+squash racquet
+pickleball paddle
+table tennis paddle
+ping pong ball
+badminton racquet
+shuttlecock
+tennis ball
+soccer cleats
+shin guards
+goalkeeper gloves
+american football
+rugby ball
+volleyball
+beach ball
+basketball hoop
+baseball bat aluminum
+baseball glove leather
+batting gloves
+catcher's mitt
+cricket bat
+cricket ball
+hockey stick
+field hockey stick
+ice hockey stick
+lacrosse stick
+golf clubs set
+golf driver
+golf putter
+golf iron
+golf balls
+golf bag
+golf glove
+golf tees
+adjustable dumbbell
+fixed dumbbell
+dumbbell set
+kettlebell weight
+barbell
+weight plate
+weight bench
+squat rack
+pull-up bar
+resistance bands
+resistance loop bands
+gym rings
+ab roller
+foam roller
+yoga mat thick
+yoga block
+yoga strap
+pilates ring
+balance ball
+exercise bike
+spin bike
+recumbent bike
+elliptical machine
+rowing machine
+treadmill folding
+stair climber
+jump rope weighted
+speed rope
+punching bag
+boxing gloves
+mma gloves
+hand wraps
+skipping rope
+agility ladder
+medicine ball
+slam ball
+sandbag
+weighted vest
+ankle weights
+gym gloves
+lifting straps
+lifting belt
+knee sleeves
+wrist wraps
+protein shaker
+gym towel
+massage ball
+camping tent
+backpacking tent
+family tent
+pop-up tent
+sleeping bag mummy
+sleeping pad
+camping mattress
+camping chair
+folding camping table
+camping stove
+portable grill
+camping lantern
+head lamp
+hammock
+cooler box
+hydration pack
+trekking poles
+hiking boots waterproof
+climbing harness
+climbing shoes
+carabiner
+paracord
+multi-tool
+survival knife
+compass
+binoculars
+fishing rod combo
+fishing reel
+tackle box
+fishing lure
+landing net
+life jacket
+kayak
+inflatable kayak
+paddle board
+kayak paddle
+surfboard longboard
+bodyboard
+wetsuit
+snorkel set
+swim fins
+swimming cap
+swim goggles
+snowboard binding
+ski poles
+ski boots
+snow goggles
+snowshoes
+sled
+
+# ---------------------------------------------------------------------------
+# TOYS, GAMES, BABY & KIDS (extended)
+# ---------------------------------------------------------------------------
+plush toy
+stuffed animal
+teddy bear large
+baby doll
+fashion doll
+rag doll
+action figure set
+collectible figure
+model kit
+diecast car
+remote control truck
+remote control drone toy
+remote control boat
+race track set
+train set
+building block set
+construction blocks
+magnetic tiles
+wooden blocks
+interlocking bricks
+jigsaw puzzle
+3d puzzle
+wooden puzzle
+floor puzzle
+board game family
+strategy board game
+card game
+party game
+dice game
+trivia game
+chess set
+checkers set
+dominoes
+playing cards
+poker set
+rubik's cube
+fidget spinner
+fidget toy
+slime kit
+play dough
+modeling clay
+kinetic sand
+craft kit
+bead kit
+painting set
+coloring book
+crayon set
+marker set
+colored pencils
+sticker book
+activity book
+science kit
+microscope kid
+telescope beginner
+robot toy
+coding robot
+educational tablet kid
+walkie talkie
+nerf blaster
+water gun
+bubble machine
+kite
+frisbee
+pogo stick
+hula hoop
+sidewalk chalk
+sandbox toy set
+sand bucket
+beach toy set
+inflatable pool
+kiddie pool
+trampoline
+swing set
+slide
+seesaw
+playhouse
+ride-on car
+balance bike
+tricycle kid
+scooter kid
+wagon
+rocking horse
+baby stroller
+jogging stroller
+double stroller
+travel system stroller
+infant car seat
+convertible car seat
+booster seat
+baby carrier
+baby wrap
+diaper backpack
+high chair convertible
+booster feeding seat
+baby bouncer
+baby swing
+baby walker
+activity gym
+play mat
+baby monitor
+video baby monitor
+crib
+convertible crib
+bassinet
+playpen
+pack and play
+changing table
+diaper pail
+baby bathtub
+baby bottle
+bottle warmer
+bottle sterilizer
+breast pump
+pacifier
+teething toy
+baby food maker
+sippy cup
+toddler plate
+bib
+nursing pillow
+swaddle blanket
+baby sleep sack
+baby blanket
+newborn onesie
+baby romper
+toddler shoes
+baby socks
+
+# ---------------------------------------------------------------------------
+# MUSICAL INSTRUMENTS (extended)
+# ---------------------------------------------------------------------------
+classical guitar
+bass guitar
+twelve-string guitar
+resonator guitar
+banjo
+mandolin
+lute
+sitar
+harp
+cello
+double bass
+viola
+digital piano
+grand piano
+upright piano
+synthesizer
+midi keyboard
+electric organ
+accordion
+harmonica
+melodica
+acoustic drum kit
+electronic drum kit
+snare drum
+bongo drums
+conga drums
+djembe
+cajon
+tambourine
+xylophone
+glockenspiel
+marimba
+vibraphone
+trumpet
+trombone
+french horn
+tuba
+cornet
+flugelhorn
+saxophone
+clarinet
+flute
+piccolo
+oboe
+bassoon
+recorder
+pan flute
+bagpipes
+guitar amplifier
+bass amplifier
+keyboard amplifier
+effects pedal
+guitar tuner
+metronome
+guitar capo
+guitar strings
+drum sticks
+music stand
+condenser microphone
+dynamic microphone
+usb microphone
+audio interface
+studio monitor
+dj controller
+turntable
+mixing console
+
+# ---------------------------------------------------------------------------
+# TOOLS, HARDWARE & GARDEN (extended)
+# ---------------------------------------------------------------------------
+cordless drill
+hammer drill
+impact driver
+rotary tool
+angle grinder
+circular saw
+jigsaw tool
+reciprocating saw
+miter saw
+table saw
+band saw
+scroll saw
+chainsaw
+oscillating tool
+belt sander
+orbital sander
+router tool
+nail gun
+staple gun
+heat gun
+soldering iron
+glue gun
+claw hammer
+rubber mallet
+sledgehammer
+screwdriver set
+precision screwdriver set
+ratcheting screwdriver
+adjustable wrench
+socket set
+allen key set
+torque wrench
+pipe wrench
+combination wrench set
+pliers set
+needle nose pliers
+locking pliers
+wire cutter
+wire stripper
+utility knife tool
+box cutter
+hand saw
+hacksaw
+tape measure
+laser measure
+spirit level
+laser level
+carpenter square
+stud finder
+chalk line
+caulking gun
+putty knife
+paint roller
+paint brush set
+paint sprayer
+paint tray
+drop cloth
+sandpaper
+work gloves
+safety goggles
+ear protection
+dust mask
+respirator
+tool belt
+tool bag
+tool chest
+rolling tool cabinet
+tool organizer
+workbench
+vise
+clamp set
+c-clamp
+bar clamp
+step ladder
+extension ladder
+folding ladder
+work light
+led work light
+headlamp work
+flashlight tactical
+rechargeable flashlight
+lantern
+extension cord heavy duty
+multimeter
+voltage tester
+wire connectors
+duct tape
+electrical tape
+zip ties
+bungee cords
+tie down straps
+lawn mower
+push mower
+robotic lawn mower
+string trimmer
+hedge trimmer
+leaf blower
+garden hose
+hose reel
+sprinkler
+watering can
+garden trowel
+hand rake
+garden fork
+shovel
+spade
+garden hoe
+pruning shears
+loppers
+pruning saw
+wheelbarrow
+garden cart
+compost bin
+raised garden bed
+plant pot large
+seed tray
+garden gloves
+kneeling pad
+weed puller
+pressure washer
+snow shovel
+snow blower
+axe
+hatchet
+log splitter
+gardening apron
+plant support stake
+trellis
+
+# ---------------------------------------------------------------------------
+# OFFICE, STATIONERY & SCHOOL (extended)
+# ---------------------------------------------------------------------------
+ballpoint pen
+gel pen
+fountain pen
+rollerball pen
+marker pen
+highlighter
+permanent marker
+whiteboard marker
+mechanical pencil
+graphite pencil
+colored pencil set
+crayons
+wax pencil
+spiral notebook
+composition notebook
+legal pad
+sticky notes
+index cards
+planner
+journal
+diary
+sketchbook
+binder
+ring binder
+file folder
+hanging folder
+document wallet
+clipboard
+stapler
+staple remover
+paper clips
+binder clips
+hole punch
+tape dispenser
+scissors office
+paper trimmer
+laminator
+label maker
+desk organizer
+pen holder
+desk pad
+monitor stand
+document holder
+whiteboard
+cork board
+bulletin board
+easel
+flip chart
+calculator
+scientific calculator
+graphing calculator
+printer paper
+cardstock
+envelope
+mailing envelope
+shipping label
+rubber stamp
+ink pad
+correction tape
+correction fluid
+glue stick
+craft glue
+rubber bands
+push pins
+thumb tacks
+desk lamp led
+book stand
+backpack laptop compartment
+lunchbox kids
+pencil pouch
+ruler
+protractor
+compass geometry
+eraser
+pencil sharpener
+
+# ---------------------------------------------------------------------------
+# PET SUPPLIES
+# ---------------------------------------------------------------------------
+dog collar
+dog leash
+retractable leash
+dog harness
+dog bed
+orthopedic dog bed
+cat bed
+pet crate
+dog kennel
+pet carrier
+cat tree
+scratching post
+litter box
+litter scoop
+dog bowl
+cat bowl
+elevated pet feeder
+automatic pet feeder
+pet water fountain
+dog toy
+chew toy
+rope toy
+squeaky toy
+catnip toy
+feather wand toy
+dog treats
+dog chew bone
+pet food storage container
+dog food
+cat food
+pet shampoo
+pet brush
+deshedding tool
+nail grinder pet
+flea comb
+dog jacket
+dog sweater
+dog boots
+pet gate
+dog ramp
+dog training pads
+poop bags
+dog whistle
+clicker training
+aquarium tank
+fish tank filter
+aquarium heater
+aquarium light
+fish net
+bird cage
+bird feeder
+hamster cage
+hamster wheel
+reptile terrarium
+pet stroller
+
+# ---------------------------------------------------------------------------
+# AUTOMOTIVE & MOTORCYCLE
+# ---------------------------------------------------------------------------
+car phone mount
+dash cam
+car charger usb
+jump starter
+tire inflator
+car vacuum
+car floor mats
+seat cover
+steering wheel cover
+car sunshade
+windshield cover
+car cover
+roof rack
+cargo carrier
+trunk organizer
+car air freshener
+car wash kit
+microfiber towel
+car wax
+tire pressure gauge
+socket wrench set automotive
+obd2 scanner
+car battery
+battery charger
+tow strap
+jumper cables
+first aid kit car
+emergency road kit
+reflective triangle
+car jack
+lug wrench
+motorcycle helmet
+motorcycle gloves
+motorcycle jacket
+riding boots
+motorcycle cover
+bike phone mount
+saddlebag
+tank bag
+gps navigator
+backup camera
+led headlight bulb
+fog lights
+wiper blades
+engine oil
+oil filter
+air filter automotive
+spark plug
+brake pads
+car speaker
+car subwoofer
+car amplifier
+
+# ---------------------------------------------------------------------------
+# HEALTH & WELLNESS
+# ---------------------------------------------------------------------------
+digital thermometer
+infrared thermometer
+blood pressure monitor
+pulse oximeter
+glucose monitor
+weighing scale
+body fat scale
+smart scale
+first aid kit
+pill organizer
+pill dispenser
+heating pad
+ice pack
+knee brace
+ankle brace
+wrist brace
+back support belt
+posture corrector
+compression sleeve
+tens unit
+foam roller massage
+handheld massager
+neck massager
+foot massager
+percussion massager
+humidifier bedroom
+air quality monitor
+nebulizer
+cpap machine
+hearing aid
+reading glasses magnifying
+blue light blocking glasses
+sleep mask
+ear plugs
+white noise machine
+aromatherapy diffuser
+essential oil set
+yoga wheel
+acupressure mat
+resistance band set
+grip strengthener
+inversion table
+walking cane
+crutches
+wheelchair
+rollator walker
+shower chair
+grab bar
+toilet safety rail
+
+# ---------------------------------------------------------------------------
+# GROCERY, FOOD & BEVERAGE PACKAGING
+# ---------------------------------------------------------------------------
+coffee beans bag
+ground coffee
+coffee capsules
+tea box
+green tea
+herbal tea
+chocolate bar
+protein bar
+granola bar
+snack pack
+potato chips bag
+cookies pack
+cereal box
+oatmeal container
+pasta box
+rice bag
+flour bag
+sugar bag
+olive oil bottle
+cooking oil bottle
+vinegar bottle
+soy sauce bottle
+hot sauce bottle
+ketchup bottle
+honey jar
+peanut butter jar
+jam jar
+spice jar
+salt shaker
+pepper grinder
+energy drink can
+soda can
+soda bottle
+bottled water
+juice carton
+milk carton
+protein powder tub
+supplement bottle
+vitamin bottle
+water gallon jug
+wine bottle
+beer bottle
+beer can
+whiskey bottle
+liquor bottle
+sparkling water can
+
+# ---------------------------------------------------------------------------
+# LUGGAGE, TRAVEL & OUTDOOR GEAR (extended)
+# ---------------------------------------------------------------------------
+travel pillow
+neck pillow
+eye mask travel
+packing organizer
+compression packing bag
+travel bottle set
+toiletry travel kit
+luggage scale
+travel adapter
+universal adapter
+portable charger travel
+travel blanket
+foldable duffel
+travel backpack carry-on
+anti-theft backpack
+laptop travel bag
+travel garment folder
+shoe travel bag
+travel first aid kit
+money belt
+passport wallet
+travel document organizer
+collapsible water bottle
+travel mug insulated
+picnic basket
+picnic blanket
+cooler backpack
+beach umbrella
+beach chair
+folding wagon
+camping cookware set
+mess kit
+portable espresso maker
+solar charger
+power bank rugged
+travel steamer
+travel iron
+
+# ---------------------------------------------------------------------------
+# SMART HOME & SECURITY
+# ---------------------------------------------------------------------------
+smart thermostat
+smart doorbell
+video doorbell
+security camera
+indoor camera
+outdoor camera
+wireless security camera
+ptz camera
+floodlight camera
+smart lock
+keypad door lock
+smart plug
+smart switch
+smart light bulb
+smart light strip
+smart power strip
+motion sensor
+door sensor
+window sensor
+water leak detector
+smoke detector
+carbon monoxide detector
+smart smoke alarm
+alarm system kit
+smart hub
+smart remote
+universal remote
+smart speaker display
+robot vacuum mop
+smart garage opener
+smart sprinkler controller
+smart blinds
+smart curtain motor
+wifi range extender smart
+baby monitor smart
+pet camera
+digital photo frame
+smart scale bluetooth
+smart pet feeder
+
+# ---------------------------------------------------------------------------
+# CRAFTS, HOBBIES & ART SUPPLIES
+# ---------------------------------------------------------------------------
+acrylic paint set
+oil paint set
+watercolor set
+gouache paint
+paint palette
+canvas board
+stretched canvas
+easel tabletop
+paint brushes art
+palette knife
+sketch pencils
+charcoal pencils
+pastel set
+oil pastels
+colored markers art
+alcohol markers
+fine liner pens
+calligraphy pen set
+ink bottle
+drawing pad
+watercolor paper
+sketch paper
+tracing paper
+craft paper
+origami paper
+scrapbook album
+scrapbook paper
+washi tape
+stickers craft
+embossing kit
+die cutting machine
+cutting mat
+craft knife set
+hot glue gun craft
+glue dots
+sewing machine portable
+serger machine
+thread spool
+sewing needles
+pin cushion
+fabric scissors
+seam ripper
+measuring tape sewing
+knitting needles
+crochet hook set
+yarn skein
+embroidery hoop
+embroidery floss
+cross stitch kit
+needlepoint kit
+loom
+spinning wheel
+beading kit
+jewelry making kit
+clay sculpting set
+pottery wheel
+kiln
+wood carving set
+soap making kit
+candle making kit
+resin art kit
+diamond painting kit
+paint by numbers kit
+model paint set
+airbrush kit
+macrame cord
+felting kit
+quilling kit
+
+# ---------------------------------------------------------------------------
+# BOOKS, MEDIA & COLLECTIBLES
+# ---------------------------------------------------------------------------
+hardcover book
+paperback book
+cookbook
+children's book
+coloring book adult
+comic book
+graphic novel
+manga volume
+textbook
+notebook journal
+photo album
+vinyl record
+music cd
+audio cassette
+dvd movie
+blu-ray disc
+video game disc
+video game cartridge
+trading card pack
+collectible coin
+stamp collection album
+model train set
+model airplane kit
+funko figure
+bobblehead
+snow globe
+puzzle box
+board game expansion
+tarot card deck
+sticker pack collectible
+
+# ---------------------------------------------------------------------------
+# SEASONAL, PARTY & GIFT
+# ---------------------------------------------------------------------------
+christmas tree
+artificial christmas tree
+christmas ornament
+string lights christmas
+christmas stocking
+christmas wreath
+advent calendar
+halloween costume
+halloween mask
+pumpkin decoration
+party balloons
+balloon arch kit
+party banner
+birthday candle
+party hat
+confetti popper
+gift box
+gift bag
+gift wrap paper
+ribbon roll
+greeting card
+photo booth props
+tablecloth party
+paper plates party
+paper cups party
+disposable cutlery
+party favors
+pinata
+led party lights
+disco ball
+bubble machine party
+fog machine
+
+# ---------------------------------------------------------------------------
+# EYEWEAR & OPTICAL (extended)
+# ---------------------------------------------------------------------------
+prescription glasses
+progressive lens glasses
+bifocal glasses
+computer glasses
+sports goggles
+swim goggles adult
+ski goggles snow
+safety goggles work
+magnifying glass
+monocle
+contact lens case
+glasses case
+lens cleaning cloth
+eyeglass chain
+reading glasses set
+
+# ---------------------------------------------------------------------------
+# BATHROOM & STORAGE (extended)
+# ---------------------------------------------------------------------------
+shower head
+handheld shower head
+rain shower head
+shower caddy
+soap dispenser
+soap dish
+toothbrush holder
+towel rack
+towel bar
+robe hook
+toilet paper holder
+toilet brush
+plunger
+bath rug
+non-slip bath mat
+shower curtain liner
+bathtub tray
+vanity organizer
+cotton ball jar
+makeup organizer
+drawer organizer
+under sink organizer
+storage bin
+storage box lidded
+plastic storage container
+storage basket woven
+shoe storage box
+closet organizer
+hanging closet shelf
+clothes hanger
+velvet hanger
+garment rack
+over-the-door organizer
+laundry basket
+laundry hamper
+laundry sorter
+drying rack
+lint roller
+vacuum storage bag
+stackable storage drawer
+cube storage bin

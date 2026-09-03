@@ -182,18 +182,96 @@ matching:
   # Max recommended products to keep per detected item.
   max_results_per_product: 5
 
-  # Restrict recommendations to these trusted ecommerce domains.
-  # LEAVE EMPTY ([]) to accept results from ANY site - do this first if you are
-  # getting empty recommendations, then re-add domains once matches appear.
-  trusted_domains: []
-  # Example of a restricted list (uncomment to use):
-  #   - "amazon."
-  #   - "ebay."
-  #   - "walmart."
-  #   - "flipkart."
-  #   - "myntra."
-  #   - "aliexpress."
-  #   - "etsy.com"
+  # Keep recommendations coming ONLY from real ecommerce sites. Two levers:
+  #
+  #   trusted_domains  -> allow-list. If non-empty, ONLY these domains are kept.
+  #   blocked_domains  -> deny-list.  ALWAYS applied (even if trusted is empty),
+  #                       so social/video/forum/news sites can never appear.
+  #
+  # ecommerce_only: with a populated allow-list below, recommendations are
+  # restricted to genuine shopping sites. Set trusted_domains to [] to accept
+  # any site that is not on the blocked_domains list.
+  ecommerce_only: true
+
+  # Trusted ecommerce domains (5x the previous short example list). Substring
+  # match against source name + url + hostname.
+  trusted_domains:
+    # --- global marketplaces ---
+    - "amazon."
+    - "ebay."
+    - "walmart."
+    - "aliexpress."
+    - "alibaba."
+    - "etsy.com"
+    - "target.com"
+    - "bestbuy.com"
+    - "costco.com"
+    - "newegg."
+    - "wish.com"
+    - "rakuten."
+    - "temu.com"
+    - "shein."
+    # --- India ---
+    - "flipkart."
+    - "myntra."
+    - "ajio.com"
+    - "meesho.com"
+    - "snapdeal.com"
+    - "tatacliq.com"
+    - "nykaa.com"
+    - "croma.com"
+    - "reliancedigital."
+    # --- fashion / apparel / footwear ---
+    - "nike.com"
+    - "adidas."
+    - "zara.com"
+    - "hm.com"
+    - "asos.com"
+    - "nordstrom.com"
+    - "macys.com"
+    - "zappos.com"
+    - "farfetch.com"
+    # --- electronics / other verticals ---
+    - "apple.com"
+    - "samsung.com"
+    - "wayfair.com"
+    - "ikea.com"
+    - "chewy.com"
+    - "sephora.com"
+
+  # Non-ecommerce sources that must NEVER be recommended. This is the fix for
+  # results leaking in from YouTube, Instagram, TikTok, Pinterest, etc.
+  blocked_domains:
+    # video / streaming
+    - "youtube.com"
+    - "youtu.be"
+    - "vimeo.com"
+    - "dailymotion.com"
+    - "twitch.tv"
+    # social media
+    - "instagram.com"
+    - "facebook.com"
+    - "fb.com"
+    - "tiktok.com"
+    - "twitter.com"
+    - "x.com"
+    - "pinterest."
+    - "snapchat.com"
+    - "reddit.com"
+    - "tumblr.com"
+    - "linkedin.com"
+    - "threads.net"
+    - "whatsapp.com"
+    - "telegram."
+    # forums / q&a / knowledge / news / blogs
+    - "quora.com"
+    - "wikipedia.org"
+    - "wikihow.com"
+    - "medium.com"
+    - "blogspot."
+    - "wordpress.com"
+    - "stackexchange.com"
+    - "stackoverflow.com"
 
   # --- Google Lens (via SerpApi) settings ---
   serpapi:

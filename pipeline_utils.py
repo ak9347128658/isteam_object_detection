@@ -809,6 +809,13 @@ class Matcher:
         self.min_score = float(get(cfg, "matching.min_match_score", 0.90))
         self.max_results = int(get(cfg, "matching.max_results_per_product", 5))
         self.trusted = [d.lower() for d in get(cfg, "matching.trusted_domains", []) or []]
+        # Non-ecommerce sources (social / video / forums / news) that should NEVER
+        # show up as product recommendations, even when trusted_domains is empty.
+        # This is what stops YouTube, Instagram, TikTok, etc. from leaking in.
+        self.blocked = [d.lower() for d in get(cfg, "matching.blocked_domains", []) or []]
+        # When true, drop anything that is not on the trusted_domains allow-list.
+        # (Only takes effect if trusted_domains is non-empty.)
+        self.ecommerce_only = bool(get(cfg, "matching.ecommerce_only", True))
         self.limiter = RateLimiter(get(cfg, "network.min_interval_seconds", 1.0))
         self.cache = SearchCache(
             get(cfg, "network.cache_dir", "cache/search"),
@@ -819,10 +826,9 @@ class Matcher:
 
     # -- domain / score filtering ------------------------------------------
     def _domain_ok(self, source: str, url: str) -> bool:
-        if not self.trusted:
-            return True
-        # Compare against both the raw source/url and the extracted hostname,
-        # since SerpApi 'link' can be a google redirect and 'source' a name.
+        # Build a haystack from the source name, raw url, and the extracted
+        # hostname, since SerpApi 'link' can be a google redirect and 'source'
+        # a display name.
         hay = f"{source} {url}".lower()
         host = ""
         try:
@@ -830,7 +836,19 @@ class Matcher:
         except Exception:
             pass
         hay = f"{hay} {host}"
-        return any(t.strip(".").lower() in hay for t in self.trusted)
+
+        # 1) Hard block non-ecommerce sources (social media, video sites,
+        #    forums, news, etc.). Applied ALWAYS, so YouTube/Instagram/TikTok
+        #    never appear as recommendations even with an empty allow-list.
+        if any(b.strip(".").lower() in hay for b in self.blocked):
+            return False
+
+        # 2) If a trusted allow-list is configured, keep only those domains.
+        if self.trusted:
+            return any(t.strip(".").lower() in hay for t in self.trusted)
+
+        # 3) No allow-list: accept everything that survived the block-list.
+        return True
 
     def _finalize(self, recs: list[Recommendation], verbose: bool = True) -> list[Recommendation]:
         n_raw = len(recs)
@@ -841,9 +859,11 @@ class Matcher:
         result = after_domain[: self.max_results]
         if verbose and n_raw and not result:
             print(f"   [match] {n_raw} raw results -> {len(after_score)} passed "
-                  f"score>={self.min_score} -> {len(after_domain)} passed domain "
-                  f"filter. Nothing kept. Lower matching.min_match_score or clear "
-                  f"matching.trusted_domains to loosen.")
+                  f"score>={self.min_score} -> {len(after_domain)} passed the "
+                  f"ecommerce domain filter (non-ecommerce sources like YouTube/"
+                  f"Instagram are dropped). Nothing kept. Lower "
+                  f"matching.min_match_score, or trim matching.trusted_domains/"
+                  f"matching.blocked_domains to loosen.")
         return result
 
     # -- public entry point ------------------------------------------------
