@@ -179,198 +179,21 @@ matching:
   # to ~0.90 (default) or 0.85 to keep more.
   min_match_score: 0.90
 
-  # Max recommended products to keep per detected item (final, after filtering).
+  # Max recommended products to keep per detected item.
   max_results_per_product: 5
 
-  # ECOMMERCE-ONLY MODE. When true, a result is kept ONLY if its domain matches
-  # the ecommerce allow-list (trusted_domains) below AND is not in blocked_domains.
-  # This removes YouTube / Instagram / Facebook / Pinterest / blogs / wikis etc.
-  ecommerce_only: true
-
-  # Block-list: results from these domains are ALWAYS dropped (social, video,
-  # search, wikis, forums, news - anything that is not a store). Substring match.
-  blocked_domains:
-    - "youtube."
-    - "youtu.be"
-    - "instagram."
-    - "facebook."
-    - "fb.watch"
-    - "tiktok."
-    - "twitter."
-    - "x.com"
-    - "pinterest."
-    - "reddit."
-    - "wikipedia."
-    - "wikimedia."
-    - "fandom.com"
-    - "quora."
-    - "medium.com"
-    - "blogspot."
-    - "wordpress."
-    - "tumblr."
-    - "linkedin."
-    - "snapchat."
-    - "vimeo."
-    - "dailymotion."
-    - "google.com"
-    - "bing.com"
-    - "yahoo."
-    - "news."
-    - "imdb.com"
-    - "spotify."
-    - "soundcloud."
-    - "twitch."
-    - "github.com"
-    - "stackoverflow."
-
-  # Ecommerce ALLOW-LIST (100+). A result must contain one of these to be kept
-  # when ecommerce_only is true. Substring match against source + hostname.
-  trusted_domains:
-    # --- Global / marketplaces ---
-    - "amazon."
-    - "ebay."
-    - "aliexpress."
-    - "alibaba."
-    - "walmart."
-    - "target.com"
-    - "etsy.com"
-    - "wish.com"
-    - "temu.com"
-    - "shein."
-    - "romwe.com"
-    - "dhgate.com"
-    - "rakuten."
-    - "newegg."
-    - "overstock.com"
-    - "wayfair."
-    - "costco.com"
-    - "samsclub.com"
-    - "bestbuy."
-    - "bhphotovideo.com"
-    - "microcenter.com"
-    - "qvc.com"
-    - "hsn.com"
-    - "groupon.com"
-    - "mercadolibre."
-    - "shopify.com"
-    - "gumtree."
-    - "backmarket."
-    # --- India ---
-    - "flipkart."
-    - "myntra."
-    - "ajio.com"
-    - "snapdeal."
-    - "meesho."
-    - "nykaa."
-    - "tatacliq."
-    - "jiomart."
-    - "croma.com"
-    - "reliancedigital."
-    - "shopclues."
-    - "firstcry."
-    - "pepperfry."
-    - "bigbasket."
-    - "purplle."
-    - "limeroad."
-    - "paytmmall."
-    - "indiamart."
-    - "1mg.com"
-    - "lenskart."
-    # --- Fashion / apparel / footwear ---
-    - "nike.com"
-    - "adidas."
-    - "puma.com"
-    - "reebok."
-    - "underarmour."
-    - "newbalance."
-    - "asics."
-    - "skechers."
-    - "vans.com"
-    - "converse.com"
-    - "crocs.com"
-    - "zara.com"
-    - "hm.com"
-    - "uniqlo.com"
-    - "gap.com"
-    - "oldnavy."
-    - "levi.com"
-    - "levis."
-    - "forever21."
-    - "mango.com"
-    - "asos.com"
-    - "boohoo.com"
-    - "prettylittlething."
-    - "urbanoutfitters."
-    - "nordstrom.com"
-    - "macys.com"
-    - "bloomingdales."
-    - "saksfifthavenue."
-    - "neimanmarcus."
-    - "farfetch.com"
-    - "net-a-porter."
-    - "ssense.com"
-    - "revolve.com"
-    - "shopbop.com"
-    - "zappos.com"
-    - "footlocker."
-    - "finishline.com"
-    - "jcpenney.com"
-    - "kohls.com"
-    - "next.co"
-    - "riverisland."
-    - "shopdisney."
-    # --- Beauty ---
-    - "sephora.com"
-    - "ulta.com"
-    - "maccosmetics."
-    - "thebodyshop."
-    # --- Electronics / brand stores ---
-    - "apple.com"
-    - "samsung.com"
-    - "dell.com"
-    - "hp.com"
-    - "lenovo.com"
-    - "sony."
-    - "lg.com"
-    - "boat-lifestyle."
-    - "mi.com"
-    - "oneplus."
-    - "gopro.com"
-    - "canon."
-    - "nikon."
-    # --- Home / furniture / general ---
-    - "ikea.com"
-    - "homedepot.com"
-    - "lowes.com"
-    - "ashleyfurniture."
-    - "westelm.com"
-    - "cb2.com"
-    - "crateandbarrel."
-    - "potterybarn."
-    - "containerstore."
-    - "bedbathandbeyond."
-    # --- UK / EU / other regions ---
-    - "argos.co"
-    - "very.co"
-    - "johnlewis.com"
-    - "currys.co"
-    - "otto.de"
-    - "zalando."
-    - "cdiscount.com"
-    - "fnac.com"
-    - "bol.com"
-    - "allegro."
-    - "noon.com"
-    - "jumia."
-    - "trendyol.com"
-    - "lazada."
-    - "shopee."
-    - "tokopedia."
-    - "coupang.com"
-    - "gmarket.co"
-    - "jd.com"
-    - "taobao.com"
-    - "tmall.com"
+  # Restrict recommendations to these trusted ecommerce domains.
+  # LEAVE EMPTY ([]) to accept results from ANY site - do this first if you are
+  # getting empty recommendations, then re-add domains once matches appear.
+  trusted_domains: []
+  # Example of a restricted list (uncomment to use):
+  #   - "amazon."
+  #   - "ebay."
+  #   - "walmart."
+  #   - "flipkart."
+  #   - "myntra."
+  #   - "aliexpress."
+  #   - "etsy.com"
 
   # --- Google Lens (via SerpApi) settings ---
   serpapi:
@@ -380,10 +203,6 @@ matching:
     lens_type: "all"   # all | exact_matches | products | visual_matches
     country: "us"
     language: "en"
-    # How many raw results to CONSIDER per search before filtering down to
-    # max_results_per_product. Google Lens returns up to ~50-100 per section;
-    # we keep this many candidates so the ecommerce filter has plenty to pick.
-    max_fetch: 100
 
 # --------------------------------------------------------------------------
 # NETWORKING: retries/backoff/caching so you don't get rate-limited or crash.

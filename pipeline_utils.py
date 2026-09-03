@@ -808,11 +808,7 @@ class Matcher:
         self.cfg = cfg
         self.min_score = float(get(cfg, "matching.min_match_score", 0.90))
         self.max_results = int(get(cfg, "matching.max_results_per_product", 5))
-        self.ecommerce_only = bool(get(cfg, "matching.ecommerce_only", True))
-        self.trusted = [d.strip(".").lower()
-                        for d in get(cfg, "matching.trusted_domains", []) or []]
-        self.blocked = [d.strip(".").lower()
-                        for d in get(cfg, "matching.blocked_domains", []) or []]
+        self.trusted = [d.lower() for d in get(cfg, "matching.trusted_domains", []) or []]
         self.limiter = RateLimiter(get(cfg, "network.min_interval_seconds", 1.0))
         self.cache = SearchCache(
             get(cfg, "network.cache_dir", "cache/search"),
@@ -821,54 +817,33 @@ class Matcher:
         # embedder is unused by the Google backend; kept for signature compatibility.
         self.embedder = embedder
 
-    # -- domain filtering (ecommerce-only) ---------------------------------
-    @staticmethod
-    def _haystack(source: str, url: str) -> str:
-        """Combine source, url, and extracted hostname for matching."""
+    # -- domain / score filtering ------------------------------------------
+    def _domain_ok(self, source: str, url: str) -> bool:
+        if not self.trusted:
+            return True
+        # Compare against both the raw source/url and the extracted hostname,
+        # since SerpApi 'link' can be a google redirect and 'source' a name.
+        hay = f"{source} {url}".lower()
         host = ""
         try:
             host = urllib.parse.urlparse(url).netloc.lower()
         except Exception:
             pass
-        return f"{source} {url} {host}".lower()
-
-    def _is_blocked(self, source: str, url: str) -> bool:
-        hay = self._haystack(source, url)
-        return any(b in hay for b in self.blocked)
-
-    def _is_ecommerce(self, source: str, url: str) -> bool:
-        """True only if the result matches the ecommerce allow-list."""
-        if not self.trusted:
-            return True   # no allow-list configured => don't restrict
-        hay = self._haystack(source, url)
-        return any(t in hay for t in self.trusted)
-
-    def _domain_ok(self, source: str, url: str) -> bool:
-        # Always drop blocked (social/video/search/wiki) domains.
-        if self._is_blocked(source, url):
-            return False
-        # In ecommerce-only mode, REQUIRE a match against the ecommerce allow-list.
-        if self.ecommerce_only:
-            return self._is_ecommerce(source, url)
-        # Otherwise, allow anything not blocked.
-        return True
+        hay = f"{hay} {host}"
+        return any(t.strip(".").lower() in hay for t in self.trusted)
 
     def _finalize(self, recs: list[Recommendation], verbose: bool = True) -> list[Recommendation]:
         n_raw = len(recs)
         after_score = [r for r in recs if r.score >= self.min_score]
-        after_block = [r for r in after_score
-                       if not self._is_blocked(r.source or "", r.url or "")]
-        after_domain = [r for r in after_block
-                        if (not self.ecommerce_only)
-                        or self._is_ecommerce(r.source or "", r.url or "")]
+        after_domain = [r for r in after_score
+                        if self._domain_ok(r.source or "", r.url or "")]
         after_domain.sort(key=lambda r: r.score, reverse=True)
         result = after_domain[: self.max_results]
         if verbose and n_raw and not result:
-            print(f"   [match] {n_raw} raw -> {len(after_score)} passed score>="
-                  f"{self.min_score} -> {len(after_block)} not blocked -> "
-                  f"{len(after_domain)} ecommerce. Nothing kept. If this is common, "
-                  f"lower matching.min_match_score, or add the store's domain to "
-                  f"matching.trusted_domains, or set matching.ecommerce_only: false.")
+            print(f"   [match] {n_raw} raw results -> {len(after_score)} passed "
+                  f"score>={self.min_score} -> {len(after_domain)} passed domain "
+                  f"filter. Nothing kept. Lower matching.min_match_score or clear "
+                  f"matching.trusted_domains to loosen.")
         return result
 
     # -- public entry point ------------------------------------------------
@@ -920,10 +895,7 @@ class Matcher:
             return []
 
         # Collect results from every relevant section Google Lens can return,
-        # tagging each with the section it came from (drives the score). We keep
-        # up to max_fetch candidates PER SECTION so the ecommerce filter has 50-100
-        # results to choose from (Google Lens returns many per image).
-        max_fetch = int(get(self.cfg, "matching.serpapi.max_fetch", 100))
+        # tagging each with the section it came from (drives the score).
         recs: list[Recommendation] = []
         sections = [
             ("exact_matches", data.get("exact_matches") or []),
@@ -932,7 +904,7 @@ class Matcher:
             ("visual_matches", data.get("visual_matches") or []),
         ]
         for section, items in sections:
-            for it in items[:max_fetch]:
+            for it in items:
                 price = None
                 if isinstance(it.get("price"), dict):
                     price = (it["price"].get("value")
