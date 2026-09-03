@@ -1,0 +1,16 @@
+# Never copy local state/artifacts into the image.
+.env
+workdir/
+cache/
+output/
+models/
+__pycache__/
+*.pyc
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.avi
+.git/
+.gitignore
+README.md

@@ -1,0 +1,340 @@
+# ============================================================================
+# Product Detection API - Configuration
+# ----------------------------------------------------------------------------
+# EVERYTHING is configurable here. Restart the API after changing values.
+# The "0.90 match" lives under `matching.min_match_score`.
+# ============================================================================
+
+# --------------------------------------------------------------------------
+# INPUT: where the video comes from. All three modes work.
+# --------------------------------------------------------------------------
+input:
+  # source_type: one of ["local", "url", "s3"]
+  source_type: "local"
+
+  # Used when source_type == "local". Path relative to this project or absolute.
+  local_path: "videos/input.mp4"
+
+  # Used when source_type == "url". Any direct http(s) link to a video file.
+  url: "https://example.com/video.mp4"
+
+  # Used when source_type == "s3". A public (or credentialed) S3 object.
+  # Both "s3://bucket/key" and "https://bucket.s3.region.amazonaws.com/key" work.
+  s3_uri: "s3://my-public-bucket/videos/input.mp4"
+
+  # Where downloaded/copied videos are cached locally before processing.
+  work_dir: "workdir"
+
+# --------------------------------------------------------------------------
+# FRAME SAMPLING: how many frames we pull out of the video to analyze.
+# --------------------------------------------------------------------------
+frames:
+  # Sample one frame every N seconds of video. Lower = more thorough, slower.
+  sample_every_seconds: 1.0
+
+  # Hard cap on number of frames analyzed (safety valve for long videos). 0 = no cap.
+  max_frames: 0
+
+  # Optional: only process a time window [start, end] in seconds. null = whole video.
+  start_time: null
+  end_time: null
+
+  # Skip near-identical consecutive frames (scene-change filtering) to save work.
+  # Frames whose perceptual-hash distance is below this are skipped.
+  skip_similar_frames: true
+  similar_frame_hash_distance: 4
+
+  # At each sample point, scan this many consecutive frames and keep the
+  # SHARPEST one. This is the main defense against motion-blurred crops
+  # (blurry frames can't be un-blurred later). 1 = disabled. Try 5-8 for
+  # fast-moving / shaky footage.
+  sharpest_window: 6
+
+# --------------------------------------------------------------------------
+# DETECTION: open-vocabulary object detector (YOLOE / YOLO-World).
+# --------------------------------------------------------------------------
+detection:
+  # Backend: "yoloe" (recommended, open-vocab) or "yoloworld".
+  backend: "yoloe"
+
+  # Model weights. Auto-downloaded by ultralytics on first run.
+  #   YOLOE:      yoloe-11l-seg.pt  (large, most accurate)
+  #   YOLO-World: yolov8x-worldv2.pt
+  model_weights: "yoloe-11l-seg.pt"
+
+  # Device to run on. "cpu" (default, works without a GPU) or "cuda:0" for a GPU.
+  # NOTE: the worker auto-detects this at runtime — if you set "cuda:0" but no
+  # CUDA GPU is available, it automatically falls back to "cpu".
+  device: "cpu"
+
+  # Minimum detection confidence to keep a box. Configurable.
+  confidence_threshold: 0.35
+
+  # NMS IoU threshold.
+  iou_threshold: 0.50
+
+  # Open-vocabulary prompt list: the product categories to look for.
+  # This is a prompt, not a hard limit — add anything you sell/recommend.
+  # Leave `use_builtin_vocab: true` to also use YOLOE's 4585-name vocabulary.
+  use_builtin_vocab: true
+
+  # Prompts are loaded from an external file (one product name per line,
+  # '#' comments and blank lines ignored). Edit that file to add products.
+  product_prompts_file: "product_prompts.txt"
+
+  # Optional inline extra prompts, appended to whatever is in the file above.
+  # Leave empty to rely solely on the file.
+  product_prompts: []
+
+  # Classes to IGNORE completely (humans + body parts). Matched case-insensitively
+  # against the detected label. The user explicitly wants humans ignored.
+  ignore_labels:
+    - "person"
+    - "man"
+    - "woman"
+    - "boy"
+    - "girl"
+    - "human"
+    - "face"
+    - "hand"
+    - "foot"
+    - "leg"
+    - "arm"
+
+  # Minimum crop size in pixels (w and h). Tiny detections are usually noise
+  # AND produce blurry crops (too few real pixels). Raise to 64-96 to drop
+  # small, low-detail detections that can never look sharp.
+  min_crop_size: 64
+
+  # Reject motion-blurred detections by Laplacian-variance sharpness.
+  # 0 = disabled. Typical usable values: 60-150 (higher = stricter).
+  # Set ~80-100 to force only crisp crops through.
+  min_sharpness: 0.0
+
+# --------------------------------------------------------------------------
+# CROPS: quality of the saved product images (fed to Google Lens).
+# Better crops => far better recommendation matches.
+# IMPORTANT: you cannot recover detail a low-res frame never captured. The
+# biggest quality win comes from frames.sharpest_window (picking a non-blurry
+# frame) and using a higher-resolution source video.
+# --------------------------------------------------------------------------
+crops:
+  # Padding added around each detection box, as a fraction of box size.
+  margin_ratio: 0.10
+  # Target: upscale small crops so the shortest side reaches this many pixels.
+  # With AI super-resolution on, 768-1024 gives crisp, detailed crops.
+  min_output_side: 768
+  # Cap for the CLASSIC (non-AI) fallback only. Blowing a tiny region up too far
+  # with plain resize just makes a big blurry blob, so we never exceed this.
+  # (AI super-resolution ignores this cap because it reconstructs detail.)
+  max_upscale: 3.0
+  # Mild unsharp-mask, applied ONLY after a classic (non-AI) upscale (0 = off).
+  # Keep low (0.25-0.45); high values create ugly halos on soft footage.
+  sharpen_strength: 0.35
+  # Output format: "png" (lossless, recommended - no JPEG softening) or "jpg".
+  format: "png"
+  # JPEG quality when format == "jpg" (1-100). Use 98 to minimize artifacts.
+  jpeg_quality: 98
+
+  # --- AI super-resolution (the real quality boost) ------------------------
+  # Uses Real-ESRGAN on your GPU to RECONSTRUCT detail in small/soft crops
+  # (not just enlarge them). This is the strongest way to increase quality.
+  # Install once:  pip install realesrgan basicsr
+  super_resolution:
+    # Turn this ON for maximum crop quality. Runs a heavy model per crop.
+    # DISABLED by default because on CPU it is extremely slow (a GPU is
+    # strongly recommended before enabling). With this off, crops fall back to
+    # the fast classic upscaler above, which works fine on CPU.
+    enabled: false
+    # Output upscale factor applied to the crop.
+    scale: 4
+    # Weights: "RealESRGAN_x4plus" (photos, recommended) or "RealESRNet_x4plus".
+    model: "RealESRGAN_x4plus"
+    # Tile size to bound VRAM (smaller = less memory, a bit slower). 0 = no tiling.
+    tile: 256
+    # Device; "cpu" or "cuda:0". Defaults to detection.device if omitted.
+    device: "cpu"
+
+# --------------------------------------------------------------------------
+# DEDUP: collapse the same physical product seen across many frames into ONE.
+# Uses CLIP image embeddings + cosine similarity.
+# --------------------------------------------------------------------------
+dedup:
+  clip_model: "ViT-B-32"
+  clip_pretrained: "openai"
+  # "cpu" (default) or "cuda:0". Auto-falls back to CPU if no GPU is present.
+  device: "cpu"
+  # Two crops with cosine similarity >= this are considered the SAME product.
+  same_product_similarity: 0.92
+  # Representative crop per product. "sharpest" picks the least-blurry crop
+  # (best for Google Lens matching); "largest" picks the biggest box.
+  representative: "sharpest"   # "largest" | "sharpest"
+
+# --------------------------------------------------------------------------
+# MATCHING: find the EXACT product on real ecommerce sites.
+# Backend is Google only (Google Lens via SerpApi). This is where the "90%"
+# threshold lives.
+# --------------------------------------------------------------------------
+matching:
+  # THE "90%" the user asked for. Only keep recommendations at/above this score.
+  # Range 0.0 - 1.0.
+  # NOTE: Google Lens does NOT return a numeric similarity, so this score is a
+  # proxy derived from which Lens section a result came from + its rank
+  # (exact_matches ~0.98, products ~0.95, visual_matches ~0.93). If you get
+  # EMPTY recommendations, this threshold is the most common cause - lower it
+  # to ~0.90 (default) or 0.85 to keep more.
+  min_match_score: 0.90
+
+  # Max recommended products to keep per detected item.
+  max_results_per_product: 5
+
+  # Keep recommendations coming ONLY from real ecommerce sites. Two levers:
+  #
+  #   trusted_domains  -> allow-list. If non-empty, ONLY these domains are kept.
+  #   blocked_domains  -> deny-list.  ALWAYS applied (even if trusted is empty),
+  #                       so social/video/forum/news sites can never appear.
+  #
+  # ecommerce_only: with a populated allow-list below, recommendations are
+  # restricted to genuine shopping sites. Set trusted_domains to [] to accept
+  # any site that is not on the blocked_domains list.
+  ecommerce_only: true
+
+  # Trusted ecommerce domains (5x the previous short example list). Substring
+  # match against source name + url + hostname.
+  trusted_domains:
+    # --- global marketplaces ---
+    - "amazon."
+    - "ebay."
+    - "walmart."
+    - "aliexpress."
+    - "alibaba."
+    - "etsy.com"
+    - "target.com"
+    - "bestbuy.com"
+    - "costco.com"
+    - "newegg."
+    - "wish.com"
+    - "rakuten."
+    - "temu.com"
+    - "shein."
+    # --- India ---
+    - "flipkart."
+    - "myntra."
+    - "ajio.com"
+    - "meesho.com"
+    - "snapdeal.com"
+    - "tatacliq.com"
+    - "nykaa.com"
+    - "croma.com"
+    - "reliancedigital."
+    # --- fashion / apparel / footwear ---
+    - "nike.com"
+    - "adidas."
+    - "zara.com"
+    - "hm.com"
+    - "asos.com"
+    - "nordstrom.com"
+    - "macys.com"
+    - "zappos.com"
+    - "farfetch.com"
+    # --- electronics / other verticals ---
+    - "apple.com"
+    - "samsung.com"
+    - "wayfair.com"
+    - "ikea.com"
+    - "chewy.com"
+    - "sephora.com"
+
+  # Non-ecommerce sources that must NEVER be recommended. This is the fix for
+  # results leaking in from YouTube, Instagram, TikTok, Pinterest, etc.
+  blocked_domains:
+    # video / streaming
+    - "youtube.com"
+    - "youtu.be"
+    - "vimeo.com"
+    - "dailymotion.com"
+    - "twitch.tv"
+    # social media
+    - "instagram.com"
+    - "facebook.com"
+    - "fb.com"
+    - "tiktok.com"
+    - "twitter.com"
+    - "x.com"
+    - "pinterest."
+    - "snapchat.com"
+    - "reddit.com"
+    - "tumblr.com"
+    - "linkedin.com"
+    - "threads.net"
+    - "whatsapp.com"
+    - "telegram."
+    # forums / q&a / knowledge / news / blogs
+    - "quora.com"
+    - "wikipedia.org"
+    - "wikihow.com"
+    - "medium.com"
+    - "blogspot."
+    - "wordpress.com"
+    - "stackexchange.com"
+    - "stackoverflow.com"
+
+  # --- Google Lens (via SerpApi) settings ---
+  serpapi:
+    # Which Lens tab to read. "all" pulls exact + products + visual matches,
+    # which maximizes the chance of a match. Narrow to "exact_matches" only if
+    # you want strictly the same product.
+    lens_type: "all"   # all | exact_matches | products | visual_matches
+    country: "us"
+    language: "en"
+
+# --------------------------------------------------------------------------
+# NETWORKING: retries/backoff/caching so you don't get rate-limited or crash.
+# --------------------------------------------------------------------------
+network:
+  max_retries: 5
+  backoff_base_seconds: 1.5     # exponential: base^attempt
+  backoff_max_seconds: 60
+  # Minimum delay between search-API calls (politeness / rate-limit safety).
+  min_interval_seconds: 1.0
+  request_timeout_seconds: 30
+  # Cache search results on disk so re-runs never re-query (and never re-bill).
+  cache_dir: "cache/search"
+  # Cache CLIP/detection artifacts too.
+  cache_enabled: true
+
+# --------------------------------------------------------------------------
+# S3 OUTPUT: where detected product crops are uploaded.
+# --------------------------------------------------------------------------
+s3:
+  enabled: true
+  # Bucket to upload detected product crops to. Must be a bucket you own,
+  # and s3.region below must match its actual region.
+  bucket: "isteam-my-output-bucket"
+  # Must match the bucket's real region, or uploads fail with a redirect error.
+  region: "us-east-1"
+  # Key prefix. {video_id} is replaced with a slug of the video name.
+  key_prefix: "product-detections/{video_id}"
+  # Also keep a local copy of crops.
+  keep_local: true
+  local_crops_dir: "output/crops"
+  # Public-read ACL for uploaded objects.
+  #   false (recommended): objects stay private; the pipeline returns a
+  #          time-limited PRESIGNED URL that Google Lens can still fetch.
+  #          Works on ANY bucket with no public-access setup and avoids the
+  #          AccessDenied you get when a bucket has ACLs disabled.
+  #   true : only works if the bucket has ACLs ENABLED and Block Public Access
+  #          turned OFF. If the ACL is rejected the pipeline auto-falls back to
+  #          a presigned URL.
+  public_read: false
+  # How long presigned URLs stay valid (seconds). Default 7 days.
+  presign_expiry_seconds: 604800
+
+# --------------------------------------------------------------------------
+# METADATA OUTPUT: the timestamped file used to overlay recommendations on video.
+# --------------------------------------------------------------------------
+metadata:
+  output_path: "output/detections.json"
+  # Also emit a WebVTT file for direct <track> overlay in an HTML5 <video>.
+  emit_webvtt: true
+  webvtt_path: "output/detections.vtt"
