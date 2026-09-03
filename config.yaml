@@ -172,7 +172,9 @@ dedup:
   # Blur removal: crops with Laplacian-variance sharpness BELOW this are dropped
   # entirely (too blurry to be useful). Raise for stricter, lower for lenient.
   # 0 disables blur removal.
-  blur_min_sharpness: 100.0
+  # NOTE: set too high and it drops EVERY crop (0 products). 20 is a safe start;
+  # the [sequential] log prints how many were dropped by blur so you can tune it.
+  blur_min_sharpness: 20.0
 
 # --------------------------------------------------------------------------
 # MATCHING: find the EXACT product on real ecommerce sites.

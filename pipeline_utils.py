@@ -688,14 +688,16 @@ def process_frames_sequential(frames, detector, embedder, cfg,
     import numpy as np
 
     seq_thresh = float(get(cfg, "dedup.sequential_skip_similarity", 0.60))
-    blur_min = float(get(cfg, "dedup.blur_min_sharpness", 100.0))
+    blur_min = float(get(cfg, "dedup.blur_min_sharpness", 20.0))
 
     kept: list[Detection] = []
     # last kept embedding per label (the "current sequence" reference)
     last_vec: dict[str, "Any"] = {}
 
+    n_detected = n_blur = n_seq = 0
     for fr in frames:
         for det in detector.detect_frame(fr):
+            n_detected += 1
             x1, y1, x2, y2 = det.bbox
             region = fr.image[max(0, y1):y2, max(0, x1):x2]
             if region.size == 0:
@@ -705,6 +707,7 @@ def process_frames_sequential(frames, detector, embedder, cfg,
             if blur_min > 0:
                 gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
                 if float(cv2.Laplacian(gray, cv2.CV_64F).var()) < blur_min:
+                    n_blur += 1
                     continue
 
             # (2) sequential same-image skip (>= threshold means "same").
@@ -716,6 +719,7 @@ def process_frames_sequential(frames, detector, embedder, cfg,
                     # same product continuing in sequence -> don't add again,
                     # but keep the sequence reference fresh.
                     last_vec[det.label] = vec
+                    n_seq += 1
                     continue
 
             # kept: save crop, remember embedding id + reference vector.
@@ -724,6 +728,12 @@ def process_frames_sequential(frames, detector, embedder, cfg,
             kept.append(det)
             last_vec[det.label] = vec
 
+    print(f"[sequential] detected={n_detected}  dropped_blur={n_blur}  "
+          f"dropped_sequential_dupe={n_seq}  kept={len(kept)}")
+    if n_detected and not kept:
+        print("[sequential] WARNING: everything was filtered out. If dropped_blur "
+              "is high, lower dedup.blur_min_sharpness (e.g. 10 or 0). If "
+              "dropped_sequential_dupe is high, raise dedup.sequential_skip_similarity.")
     return kept
 
 
