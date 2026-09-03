@@ -25,3 +25,4 @@ catalog/embeddings.npy
 # OS
 .DS_Store
 Thumbs.db
+mobileclip_blt.ts
