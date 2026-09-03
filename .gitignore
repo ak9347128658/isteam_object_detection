@@ -9,9 +9,11 @@ __pycache__/
 venv/
 env/
 
-# Model weights (auto-downloaded)
+# Model weights (auto-downloaded / prefetched)
 *.pt
+*.pth
 *.onnx
+models/
 
 # Work / output artifacts
 workdir/
