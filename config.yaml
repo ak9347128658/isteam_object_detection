@@ -164,16 +164,6 @@ dedup:
   # (best for Google Lens matching); "largest" picks the biggest box.
   representative: "sharpest"   # "largest" | "sharpest"
 
-  # --- Sequential (consecutive-frame) de-duplication --------------------
-  # Walk frames in order; if a detection matches the last KEPT crop of the same
-  # label with cosine similarity >= this, it is the same product continuing in
-  # sequence and is NOT added again. User rule: skip when match >= 0.60.
-  sequential_skip_similarity: 0.60
-  # Blur removal: crops with Laplacian-variance sharpness BELOW this are dropped
-  # entirely (too blurry to be useful). Raise for stricter, lower for lenient.
-  # 0 disables blur removal.
-  blur_min_sharpness: 100.0
-
 # --------------------------------------------------------------------------
 # MATCHING: find the EXACT product on real ecommerce sites.
 # Backend is Google only (Google Lens via SerpApi). This is where the "90%"
