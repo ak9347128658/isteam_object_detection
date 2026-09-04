@@ -1073,8 +1073,12 @@ class S3Uploader:
         import boto3
         self.cfg = cfg
         self.enabled = bool(get(cfg, "s3.enabled", True))
-        self.bucket = get(cfg, "s3.bucket")
-        self.region = get(cfg, "s3.region", "us-east-1")
+        # Prefer the deployment's real output bucket/region (same env the worker
+        # uses for detections.json/.vtt) over the placeholder in config.yaml, so
+        # crops land in the actual bucket without editing the baked-in config.
+        self.bucket = os.getenv("OUTPUT_BUCKET") or get(cfg, "s3.bucket")
+        self.region = (os.getenv("OUTPUT_REGION")
+                       or get(cfg, "s3.region", "us-east-1"))
         self.prefix = get(cfg, "s3.key_prefix", "product-detections/{video_id}").format(
             video_id=video_id)
         self.public = bool(get(cfg, "s3.public_read", False))
@@ -1088,15 +1092,25 @@ class S3Uploader:
         if not self.enabled:
             return
         from botocore.exceptions import ClientError, NoCredentialsError
-        if not self.bucket or self.bucket == "my-output-bucket":
+        if not self.bucket or self.bucket in ("my-output-bucket",
+                                              "isteam-my-output-bucket"):
             raise RuntimeError(
-                "s3.bucket is not set to a real bucket you own (it is "
-                f"{self.bucket!r}). Edit config.yaml -> s3.bucket."
+                "Output bucket is not set to a real bucket you own (it is "
+                f"{self.bucket!r}). Set the OUTPUT_BUCKET env var (recommended) "
+                "or config.yaml -> s3.bucket."
             )
-        if not os.getenv("AWS_ACCESS_KEY_ID") and not os.getenv("AWS_PROFILE"):
+        # Detect credentials via the FULL boto3 chain (env vars, shared config,
+        # EC2 instance profile, AND the ECS task-role / container credentials
+        # endpoint) — not just AWS_ACCESS_KEY_ID — so an IAM role is recognized.
+        try:
+            import boto3
+            _have_creds = boto3.Session().get_credentials() is not None
+        except Exception:
+            _have_creds = False
+        if not _have_creds:
             raise RuntimeError(
-                "No AWS credentials found. Set AWS_ACCESS_KEY_ID / "
-                "AWS_SECRET_ACCESS_KEY (or a profile / IAM role)."
+                "No AWS credentials found. Provide an IAM role (ECS task role / "
+                "EC2 instance profile) or AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY."
             )
         try:
             self.client.head_bucket(Bucket=self.bucket)
