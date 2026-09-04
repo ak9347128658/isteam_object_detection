@@ -12,12 +12,12 @@ here when a video finishes.
 ## Endpoint
 
 ```
-POST https://a1b2c3d4e5.execute-api.us-east-1.amazonaws.com/prod/callback
+POST https://f9u39iuej4.execute-api.us-east-1.amazonaws.com/default/isteam-object-detection-process-callback-lambda/callback
 Content-Type: application/json
 ```
 
-- HTTP API (`$default` stage): `https://a1b2c3d4e5.execute-api.us-east-1.amazonaws.com/callback`
-- REST API (`prod` stage):     `https://a1b2c3d4e5.execute-api.us-east-1.amazonaws.com/prod/callback`
+- HTTP API (`$default` stage): `https://f9u39iuej4.execute-api.us-east-1.amazonaws.com/default/isteam-object-detection-process-callback-lambda/callback`
+- REST API (`prod` stage):     `https://f9u39iuej4.execute-api.us-east-1.amazonaws.com/default/isteam-object-detection-process-callback-lambda/prod/callback`
 
 Replace `a1b2c3d4e5` / `us-east-1` / stage with your own values.
 
