@@ -297,7 +297,18 @@ def _download_with_ytdlp(url: str, work_dir: Path) -> Path:
 
 
 def _download_from_s3(s3_uri: str, work_dir: Path, cfg: dict) -> Path:
-    """Download an S3 object. Works for public objects and credentialed access."""
+    """
+    Download an S3 object.
+
+    Credential resolution:
+      - By default, use the standard boto3 credential chain (env vars, shared
+        config, EC2 instance profile, and — importantly — the ECS task-role /
+        container credentials endpoint). This is what lets a private object be
+        read with an IAM task role, with NO access keys in the container.
+      - Only fall back to anonymous (UNSIGNED) access when there are genuinely
+        no credentials available anywhere, so truly public buckets still work.
+      - Set S3_FORCE_ANONYMOUS=1 to force anonymous access explicitly.
+    """
     import boto3
     from botocore import UNSIGNED
     from botocore.client import Config as BotoConfig
@@ -306,7 +317,18 @@ def _download_from_s3(s3_uri: str, work_dir: Path, cfg: dict) -> Path:
     dest = work_dir / Path(key).name
     region = get(cfg, "s3.region") or os.getenv("AWS_DEFAULT_REGION", "us-east-1")
 
-    have_creds = bool(os.getenv("AWS_ACCESS_KEY_ID"))
+    force_anon = os.getenv("S3_FORCE_ANONYMOUS", "").strip().lower() in (
+        "1", "true", "yes", "on")
+
+    # Detect credentials via the FULL boto3 chain (not just AWS_ACCESS_KEY_ID),
+    # so ECS task roles / EC2 instance profiles are correctly picked up.
+    have_creds = False
+    if not force_anon:
+        try:
+            have_creds = boto3.Session().get_credentials() is not None
+        except Exception:
+            have_creds = False
+
     if have_creds:
         s3 = boto3.client("s3", region_name=region)
     else:

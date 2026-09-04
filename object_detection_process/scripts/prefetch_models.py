@@ -135,13 +135,42 @@ def main() -> int:
     open_clip.create_model_and_transforms(clip_name, pretrained=clip_pre, device=device)
     print("  CLIP ready")
 
+    # YOLOE text-prompt encoder (Ultralytics `clip`). YOLOE's open-vocab prompt
+    # path (get_text_pe/set_classes) needs the `clip` package + its text-encoder
+    # weights. Warm it here so both are baked into the image and NOTHING is
+    # downloaded at runtime. Do it explicitly (not swallowed) so the build fails
+    # loudly if the offline setup is incomplete.
+    use_builtin = bool(pu.get(cfg, "detection.use_builtin_vocab", True))
+    prompts = pu.load_product_prompts(cfg)
+    if prompts:
+        print(f"[2b/3] YOLOE text-prompt encoder (clip) for {len(prompts)} prompts")
+        import clip  # noqa: F401  (Ultralytics CLIP text encoder; must be importable)
+        from ultralytics import YOLO
+        m = YOLO(pu._resolve_yolo_weights(yolo_weights))
+        # Downloads + caches the CLIP text weights YOLOE uses for prompt PE.
+        m.set_classes(prompts, m.get_text_pe(prompts))
+        print("  YOLOE text encoder ready")
+
+    clip_name = pu.get(cfg, "dedup.clip_model", "ViT-B-32")
+    clip_pre = pu.get(cfg, "dedup.clip_pretrained", "openai")
+    print(f"[3/3] CLIP embedder ({clip_name}, {clip_pre})")
+    import open_clip
+    open_clip.create_model_and_transforms(clip_name, pretrained=clip_pre, device=device)
+    print("  CLIP embedder ready")
+
     sr_name = pu.get(cfg, "crops.super_resolution.model", "RealESRGAN_x4plus")
-    print(f"[3/3] Real-ESRGAN ({sr_name})")
-    url = REALESRGAN_URLS.get(sr_name, REALESRGAN_URLS["RealESRGAN_x4plus"])
-    _download(url, REALESRGAN_DIR / f"{sr_name}.pth")
+    if bool(pu.get(cfg, "crops.super_resolution.enabled", False)):
+        print(f"[extra] Real-ESRGAN ({sr_name})")
+        url = REALESRGAN_URLS.get(sr_name, REALESRGAN_URLS["RealESRGAN_x4plus"])
+        _download(url, REALESRGAN_DIR / f"{sr_name}.pth")
+    else:
+        print(f"[extra] Real-ESRGAN disabled in config; downloading {sr_name} anyway "
+              f"so enabling it later needs no runtime download")
+        url = REALESRGAN_URLS.get(sr_name, REALESRGAN_URLS["RealESRGAN_x4plus"])
+        _download(url, REALESRGAN_DIR / f"{sr_name}.pth")
 
     print()
-    print("Warming Detector + Embedder (same path as the API)...")
+    print("Warming Detector + Embedder (same path as the worker)...")
     pu.Detector(cfg)
     pu.Embedder(cfg, section="dedup")
     print("Prefetch complete. Run one video with: python worker.py "
