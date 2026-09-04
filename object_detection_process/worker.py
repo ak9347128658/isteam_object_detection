@@ -279,12 +279,13 @@ def process_one(
     print(f"[job {job_id}] writing detections.json / detections.vtt")
     pu.write_metadata(products, _video_info(video_path, video_id), job_cfg)
 
-    # Upload the two output files under a unique suffix.
+    # Upload the two output files. Both the folder AND the filenames carry the
+    # unique suffix, so files are like detections_<suffix>.json / .vtt.
     suffix = _unique_suffix(video_id, job_id)
     out = OutputUploader(cfg)
     print(f"[job {job_id}] uploading outputs under suffix {suffix}")
-    json_res = out.upload(json_path, suffix, "detections.json")
-    vtt_res = out.upload(vtt_path, suffix, "detections.vtt")
+    json_res = out.upload(json_path, suffix, f"detections_{suffix}.json")
+    vtt_res = out.upload(vtt_path, suffix, f"detections_{suffix}.vtt")
 
     payload = {
         "job_id": job_id,

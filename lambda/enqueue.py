@@ -10,14 +10,15 @@ RunTask, or the worker in --poll mode) then runs one container per message with
 the video S3 link injected as an environment variable.
 
 Environment variables:
-    QUEUE_URL        (required)  SQS queue to send jobs to.
-    CALLBACK_URL     (required)  URL the worker will POST results to.
-    OUTPUT_BUCKET    (required)  Bucket where detections.json/.vtt are stored.
-    SKIP_MATCHING    (optional)  "true" to skip S3 crop upload + Google Lens.
-    ALLOWED_EXTS     (optional)  Comma list, default "mp4,mov,mkv,webm,avi,m4v".
+    QUEUE_URL             (required)  SQS queue to send jobs to.
+    CALLBACK_URL          (required)  URL the worker will POST results to.
+    OUTPUT_BUCKET         (required)  Bucket where detections.json/.vtt are stored.
+    SKIP_MATCHING         (optional)  "true" to skip S3 crop upload + Google Lens.
+    ALLOWED_EXTS          (optional)  Comma list, default "mp4,mov,mkv,webm,avi,m4v".
+    PRESIGN_TTL_SECONDS   (optional)  Presigned GET URL lifetime. Default 604800 (7d).
 
-IAM: this Lambda needs sqs:SendMessage on QUEUE_URL and read on the input bucket
-notification. No S3 read of the object body is required.
+IAM: this Lambda needs sqs:SendMessage on QUEUE_URL and s3:GetObject on the input
+bucket (to sign the presigned URL for the private object).
 """
 
 from __future__ import annotations
@@ -30,8 +31,10 @@ import uuid
 import boto3
 
 _sqs = boto3.client("sqs")
+_s3 = boto3.client("s3")
 
 _DEFAULT_EXTS = "mp4,mov,mkv,webm,avi,m4v"
+_PRESIGN_TTL = int(os.getenv("PRESIGN_TTL_SECONDS", "604800"))
 
 
 def _allowed(key: str) -> bool:
@@ -44,10 +47,19 @@ def _allowed(key: str) -> bool:
     return ext in exts
 
 
+def _presigned_url(bucket: str, key: str) -> str:
+    return _s3.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": bucket, "Key": key},
+        ExpiresIn=_PRESIGN_TTL,
+    )
+
+
 def _job_message(bucket: str, key: str) -> dict:
     return {
         "job_id": uuid.uuid4().hex,
         "s3_uri": f"s3://{bucket}/{key}",
+        "presigned_url": _presigned_url(bucket, key),
         "bucket": bucket,
         "key": key,
         "callback_url": os.environ["CALLBACK_URL"],
@@ -57,7 +69,7 @@ def _job_message(bucket: str, key: str) -> dict:
     }
 
 
-def handler(event, context):
+def lambda_handler(event, context):
     """Entry point. Handles standard S3 ObjectCreated notifications."""
     queue_url = os.environ["QUEUE_URL"]
     enqueued = []

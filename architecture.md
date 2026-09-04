@@ -147,12 +147,14 @@ Both are uploaded to the **output bucket** under a key that carries a **unique
 suffix** so results never collide:
 
 ```
-s3://<output-bucket>/detections/<video_id>-<job_id_short>-<timestamp>/detections.json
-s3://<output-bucket>/detections/<video_id>-<job_id_short>-<timestamp>/detections.vtt
+s3://<output-bucket>/detections/<suffix>/detections_<suffix>.json
+s3://<output-bucket>/detections/<suffix>/detections_<suffix>.vtt
 ```
 
-The unique suffix = `<video_id>-<8charJobId>-<UTCtimestamp>`. Product **crop**
-images are uploaded during matching (needed for Google Lens) exactly as today.
+The unique suffix = `<video_id>-<8charJobId>-<UTCtimestamp>`, and it appears in
+BOTH the folder and the filenames (`detections_<suffix>.json`), so every file is
+uniquely named on its own. Product **crop** images are uploaded during matching
+(needed for Google Lens) exactly as today.
 
 ### 6. Callback (POST)
 After a successful upload, the container sends a **POST** to `CALLBACK_URL`:
