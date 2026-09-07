@@ -1,9 +1,11 @@
 # ============================================================================
-# One-shot video object-detection worker (Architecture 1).
+# One-shot video object-detection worker (Architecture 2 — no storage).
 #
 # The image bakes the model weights in at BUILD time (prefetch_models.py) so the
-# container never downloads models at runtime — it starts, processes ONE video,
-# uploads results to S3, POSTs the callback, and exits.
+# container never downloads models at runtime — it starts, downloads ONE video
+# from VIDEO_URL into a per-job temp dir, runs the pipeline, POSTs
+# detections.json + detections.vtt INLINE to CALLBACK_URL, deletes the temp dir,
+# and exits. Nothing is persisted to S3.
 #
 # CPU build (default):
 #   docker build -t object-detection-process .
@@ -64,6 +66,7 @@ ENV HF_HUB_OFFLINE=1 \
     YOLO_OFFLINE=1 \
     ULTRALYTICS_AUTOUPDATE=false
 
-# One-shot entrypoint: reads VIDEO_S3_URI / CALLBACK_URL / JOB_ID from env,
-# processes the video, uploads outputs, POSTs the callback, then exits.
+# One-shot entrypoint: reads VIDEO_URL / CALLBACK_URL / VIDEO_ID / JOB_ID from
+# env, downloads + processes the video in a temp dir, POSTs the .json/.vtt inline
+# to the callback, deletes the temp dir, then exits.
 ENTRYPOINT ["python", "worker.py"]

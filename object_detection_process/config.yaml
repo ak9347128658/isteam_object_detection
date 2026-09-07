@@ -6,23 +6,24 @@
 # ============================================================================
 
 # --------------------------------------------------------------------------
-# INPUT: where the video comes from. All three modes work.
+# INPUT: where the video comes from.
 # --------------------------------------------------------------------------
+# In this architecture (no storage) the worker ALWAYS overrides these at
+# runtime from the VIDEO_URL env var (source_type -> "url"). These values are
+# only used for a manual/local test run.
 input:
-  # source_type: one of ["local", "url", "s3"]
-  source_type: "local"
+  # source_type: one of ["local", "url"]. The worker forces "url" per job.
+  source_type: "url"
+
+  # Used when source_type == "url". Any direct http(s) link to a video file
+  # (video-host URLs also work — the worker uses yt-dlp).
+  url: "https://example.com/video.mp4"
 
   # Used when source_type == "local". Path relative to this project or absolute.
   local_path: "videos/input.mp4"
 
-  # Used when source_type == "url". Any direct http(s) link to a video file.
-  url: "https://example.com/video.mp4"
-
-  # Used when source_type == "s3". A public (or credentialed) S3 object.
-  # Both "s3://bucket/key" and "https://bucket.s3.region.amazonaws.com/key" work.
-  s3_uri: "s3://my-public-bucket/videos/input.mp4"
-
-  # Where downloaded/copied videos are cached locally before processing.
+  # Where downloaded videos are cached locally before processing. At runtime the
+  # worker points this at a per-job temp dir that is deleted on exit.
   work_dir: "workdir"
 
 # --------------------------------------------------------------------------
@@ -304,31 +305,24 @@ network:
   cache_enabled: true
 
 # --------------------------------------------------------------------------
-# S3 OUTPUT: where detected product crops are uploaded.
+# NO STORAGE — this architecture never uploads detections.json / .vtt anywhere;
+# they are delivered INLINE in the callback POST and the temp dir is deleted on
+# exit. The only (optional, transient) S3 use is an ephemeral SCRATCH bucket to
+# give Google Lens a fetchable crop URL, controlled by the SCRATCH_BUCKET env
+# var (option A). Those crop objects are deleted right after matching.
+#
+# The settings below are used ONLY for that ephemeral scratch path.
 # --------------------------------------------------------------------------
 s3:
-  enabled: true
-  # Bucket to upload detected product crops to. Must be a bucket you own,
-  # and s3.region below must match its actual region.
-  bucket: "isteam-my-output-bucket"
-  # Must match the bucket's real region, or uploads fail with a redirect error.
+  # Disabled: no persistent crop/output upload. The worker forces this off.
+  enabled: false
+  # Region used for the optional ephemeral SCRATCH bucket if SCRATCH_REGION /
+  # AWS_DEFAULT_REGION are not set.
   region: "us-east-1"
-  # Key prefix. {video_id} is replaced with a slug of the video name.
-  key_prefix: "product-detections/{video_id}"
-  # Also keep a local copy of crops.
-  keep_local: true
   local_crops_dir: "output/crops"
-  # Public-read ACL for uploaded objects.
-  #   false (recommended): objects stay private; the pipeline returns a
-  #          time-limited PRESIGNED URL that Google Lens can still fetch.
-  #          Works on ANY bucket with no public-access setup and avoids the
-  #          AccessDenied you get when a bucket has ACLs disabled.
-  #   true : only works if the bucket has ACLs ENABLED and Block Public Access
-  #          turned OFF. If the ACL is rejected the pipeline auto-falls back to
-  #          a presigned URL.
-  public_read: false
-  # How long presigned URLs stay valid (seconds). Default 7 days.
-  presign_expiry_seconds: 604800
+  # TTL for the presigned SCRATCH crop URLs handed to Google Lens (seconds).
+  # Short-lived on purpose; the crop objects are also deleted after matching.
+  presign_expiry_seconds: 3600
 
 # --------------------------------------------------------------------------
 # METADATA OUTPUT: the timestamped file used to overlay recommendations on video.

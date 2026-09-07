@@ -58,22 +58,30 @@ def lambda_handler(event, context):
     logger.info("=== detection callback received ===")
     logger.info("method=%s source_ip=%s", method, source_ip)
 
-    # Log the well-known fields the worker sends, when present.
+    # Log the well-known scalar fields the worker sends, when present.
     for key in (
+        "video_id",
         "job_id",
         "status",
-        "video_s3_uri",
-        "unique_suffix",
         "product_count",
-        "detections_json_s3_uri",
-        "detections_vtt_s3_uri",
-        "detections_json_url",
-        "detections_vtt_url",
         "error",
         "finished_at",
     ):
         if key in body:
             logger.info("  %s = %s", key, body[key])
+
+    # The results are delivered INLINE (no S3 links in Architecture 2). Log their
+    # sizes rather than the full content to keep CloudWatch logs readable.
+    dj = body.get("detections_json")
+    if dj is not None:
+        try:
+            product_count = len(dj.get("products", [])) if isinstance(dj, dict) else "?"
+        except Exception:
+            product_count = "?"
+        logger.info("  detections_json = <inline object, products=%s>", product_count)
+    dv = body.get("detections_vtt")
+    if isinstance(dv, str):
+        logger.info("  detections_vtt = <inline WebVTT, %d chars>", len(dv))
 
     # And always log the full raw payload so nothing is missed.
     logger.info("raw_payload=%s", raw_body)

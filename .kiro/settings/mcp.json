@@ -1,3 +1,14 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "jira": {
+      "command": "uvx",
+      "args": ["mcp-atlassian@latest"],
+      "env": {
+        "JIRA_URL": "https://ideyalabs.atlassian.net/",
+        "JIRA_USERNAME": "asifk@ideyalabs.com",
+        "JIRA_API_TOKEN": "ATATT3xFfGF00ibtbA5w560uSb25Expiwe-eD9LgHWXGW8BSJ95jKqC0csdJ20cuN2xexwMpja8GZbZtz4GVopixTMwYOEEap2WMqljnhCtTaVe0tAzPhXqv0gw1dTRjGFSHaN2i5MVTgUQMl0EyOOmG7S7aOc-thWCYEOn0wj49YTZjNaHFICk=2E76B718"
+      },
+      "disabled": false
+    }
+  }
 }

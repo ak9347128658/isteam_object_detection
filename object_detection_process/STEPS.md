@@ -4,6 +4,11 @@ This guide builds the Docker image for `object_detection_process` **with all
 model weights baked in** (YOLOE + CLIP + Real-ESRGAN + YOLOE's text-prompt
 model), then pushes it to a private **Amazon ECR** repository.
 
+> Architecture 2 (no storage): the container takes a `VIDEO_URL`, processes it
+> in a temp dir, POSTs `detections.json` + `detections.vtt` inline to
+> `CALLBACK_URL`, deletes the temp dir, and exits. It does **not** upload
+> results to S3.
+
 > All commands are run from inside the `object_detection_process/` folder unless
 > stated otherwise.
 
@@ -18,8 +23,9 @@ never downloads models.
 
 - `.dockerignore` intentionally excludes `models/`, `.env`, `workdir/`,
   `cache/`, `output/`, and video files.
-- Result: a self-contained image that starts, processes one video, uploads
-  results, POSTs a callback, and exits.
+- Result: a self-contained image that starts, downloads one video from a URL,
+  processes it, POSTs the results inline to a callback, deletes its temp dir,
+  and exits.
 
 ---
 
@@ -145,10 +151,22 @@ Pull-and-run on any Docker host that is authenticated to ECR (step 3):
 
 ```powershell
 docker run --rm `
-  -e VIDEO_S3_URI="s3://isteam-video-input/uploads/clip.mp4" `
+  -e VIDEO_URL="https://cdn.example.com/clips/clip.mp4" `
   -e CALLBACK_URL="https://api.example.com/detections/callback" `
-  -e OUTPUT_BUCKET="isteam-video-output" `
-  -e OUTPUT_REGION="$AWS_REGION" `
+  -e VIDEO_ID="abc-123" `
+  -e SKIP_MATCHING="true" `
+  "$ECR_URI`:$IMAGE_TAG"
+```
+
+To enable Google Lens recommendations, add an ephemeral scratch bucket (crops
+are deleted right after matching) and a SerpApi key:
+
+```powershell
+docker run --rm `
+  -e VIDEO_URL="https://cdn.example.com/clips/clip.mp4" `
+  -e CALLBACK_URL="https://api.example.com/detections/callback" `
+  -e VIDEO_ID="abc-123" `
+  -e SCRATCH_BUCKET="isteam-lens-scratch" `
   -e AWS_ACCESS_KEY_ID="..." `
   -e AWS_SECRET_ACCESS_KEY="..." `
   -e AWS_DEFAULT_REGION="$AWS_REGION" `
@@ -160,8 +178,8 @@ On ECS/Fargate or EC2, prefer an **IAM task role / instance profile** over
 passing `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` as env vars.
 
 Environment variables the container reads (see `.env.example`):
-`VIDEO_S3_URI`, `CALLBACK_URL`, `JOB_ID`, `OUTPUT_BUCKET`, `OUTPUT_PREFIX`,
-`OUTPUT_REGION`, `OUTPUT_PUBLIC`, `SKIP_MATCHING`, `SQS_QUEUE_URL`,
+`VIDEO_URL`, `CALLBACK_URL`, `VIDEO_ID`, `JOB_ID`, `SKIP_MATCHING`,
+`SCRATCH_BUCKET`, `SCRATCH_REGION`, `SCRATCH_PREFIX`, `SQS_QUEUE_URL`,
 `SQS_VISIBILITY`, `SERPAPI_API_KEY`, `AWS_*`.
 
 ---
@@ -179,9 +197,11 @@ Environment variables the container reads (see `.env.example`):
 - `ecr:BatchGetImage`, `ecr:GetDownloadUrlForLayer`,
   `ecr:BatchCheckLayerAvailability`
 
-**Runtime (S3 + optional SQS):**
-- `s3:GetObject` on the input bucket, `s3:PutObject` on the output bucket
-- `sqs:ReceiveMessage`, `sqs:DeleteMessage` (only for `--poll` mode)
+**Runtime:**
+- No S3 for input/output (video comes from a URL; results go to the callback).
+- `s3:PutObject` + `s3:DeleteObject` on the **scratch bucket** only when using
+  Google Lens matching via `SCRATCH_BUCKET` (crops are deleted after matching).
+- `sqs:ReceiveMessage`, `sqs:DeleteMessage` (only for `--poll` mode).
 
 ---
 
