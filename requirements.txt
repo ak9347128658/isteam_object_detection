@@ -27,7 +27,8 @@ yt-dlp>=2024.3.10          # robust video download from URLs
 requests>=2.31.0
 tqdm>=4.66.0
 
-# --- AWS S3 ---
+# --- AWS S3 (optional: input videos from S3, or the legacy crop-URL path) ---
+# Colab matching does not need this: crops are POSTed to SerpApi's Image API.
 boto3>=1.34.0
 
 # --- Search backends ---

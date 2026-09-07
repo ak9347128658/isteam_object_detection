@@ -7,6 +7,11 @@ The Lambda simply returns `200` and logs the payload to CloudWatch log group
 `/aws/lambda/isteam-object-detection-process-callback-lambda`. The worker POSTs
 here when a video finishes.
 
+> **No storage (Architecture 2):** the worker keeps nothing. It POSTs the
+> `detections.json` and `detections.vtt` **inline** in the callback body — as a
+> JSON object (`detections_json`) and a WebVTT string (`detections_vtt`) — tagged
+> with the caller's `video_id`. There are no S3 links.
+
 ---
 
 ## Endpoint
@@ -33,16 +38,29 @@ Host: a1b2c3d4e5.execute-api.us-east-1.amazonaws.com
 Content-Type: application/json
 
 {
+  "video_id": "summer-lookbook-42",
   "job_id": "3f9c2a1b7d4e4f8a9c10ee55aa22bb33",
   "status": "completed",
-  "video_s3_uri": "s3://isteam-video-input/uploads/summer-lookbook.mp4",
-  "unique_suffix": "summer-lookbook-3f9c2a1b-20260903T100200Z",
   "product_count": 4,
-  "detections_json_s3_uri": "s3://isteam-video-output/detections/summer-lookbook-3f9c2a1b-20260903T100200Z/detections.json",
-  "detections_vtt_s3_uri": "s3://isteam-video-output/detections/summer-lookbook-3f9c2a1b-20260903T100200Z/detections.vtt",
-  "detections_json_url": "https://isteam-video-output.s3.us-east-1.amazonaws.com/detections/summer-lookbook-3f9c2a1b-20260903T100200Z/detections.json?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=604800&X-Amz-Signature=abcd1234",
-  "detections_vtt_url": "https://isteam-video-output.s3.us-east-1.amazonaws.com/detections/summer-lookbook-3f9c2a1b-20260903T100200Z/detections.vtt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=604800&X-Amz-Signature=efgh5678",
-  "finished_at": "2026-09-03T10:02:00Z"
+  "detections_json": {
+    "video": { "id": "summer-lookbook-42", "fps": 30.0, "duration_seconds": 42.0, "width": 1920, "height": 1080 },
+    "product_count": 4,
+    "products": [
+      {
+        "product_id": "p0000",
+        "label": "sneaker",
+        "first_seen": 1.0,
+        "last_seen": 8.0,
+        "occurrences": [{ "timestamp": 1.0, "bbox": [10, 20, 110, 220], "confidence": 0.82 }],
+        "recommendations": [
+          { "title": "Retro Runner", "url": "https://amazon.com/...", "source": "amazon.com",
+            "price": "$79", "thumbnail": "https://...", "score": 0.95, "backend": "google_lens" }
+        ]
+      }
+    ]
+  },
+  "detections_vtt": "WEBVTT\n\n00:00:01.000 --> 00:00:08.000\n[p0000] sneaker -> Retro Runner ($79) https://amazon.com/...\n",
+  "finished_at": "2026-09-07T10:02:00Z"
 }
 ```
 
@@ -63,14 +81,13 @@ Content-Type: application/json
 curl.exe -X POST "https://a1b2c3d4e5.execute-api.us-east-1.amazonaws.com/prod/callback" `
   -H "Content-Type: application/json" `
   -d '{
+        "video_id": "summer-lookbook-42",
         "job_id": "3f9c2a1b7d4e4f8a9c10ee55aa22bb33",
         "status": "completed",
-        "video_s3_uri": "s3://isteam-video-input/uploads/summer-lookbook.mp4",
-        "unique_suffix": "summer-lookbook-3f9c2a1b-20260903T100200Z",
         "product_count": 4,
-        "detections_json_s3_uri": "s3://isteam-video-output/detections/summer-lookbook-3f9c2a1b-20260903T100200Z/detections.json",
-        "detections_vtt_s3_uri": "s3://isteam-video-output/detections/summer-lookbook-3f9c2a1b-20260903T100200Z/detections.vtt",
-        "finished_at": "2026-09-03T10:02:00Z"
+        "detections_json": { "video": { "id": "summer-lookbook-42" }, "products": [] },
+        "detections_vtt": "WEBVTT\n\n00:00:01.000 --> 00:00:08.000\n[p0000] sneaker\n",
+        "finished_at": "2026-09-07T10:02:00Z"
       }'
 ```
 
@@ -88,14 +105,13 @@ Response:
 curl -X POST "https://a1b2c3d4e5.execute-api.us-east-1.amazonaws.com/prod/callback" \
   -H "Content-Type: application/json" \
   -d '{
+        "video_id": "watch-review-7",
         "job_id": "8a7b6c5d4e3f2109",
         "status": "completed",
-        "video_s3_uri": "s3://isteam-video-input/uploads/watch-review.mp4",
-        "unique_suffix": "watch-review-8a7b6c5d-20260903T113000Z",
         "product_count": 2,
-        "detections_json_s3_uri": "s3://isteam-video-output/detections/watch-review-8a7b6c5d-20260903T113000Z/detections.json",
-        "detections_vtt_s3_uri": "s3://isteam-video-output/detections/watch-review-8a7b6c5d-20260903T113000Z/detections.vtt",
-        "finished_at": "2026-09-03T11:30:00Z"
+        "detections_json": { "video": { "id": "watch-review-7" }, "products": [] },
+        "detections_vtt": "WEBVTT\n\n00:00:03.000 --> 00:00:09.000\n[p0000] watch\n",
+        "finished_at": "2026-09-07T11:30:00Z"
       }'
 ```
 
@@ -111,11 +127,11 @@ Host: a1b2c3d4e5.execute-api.us-east-1.amazonaws.com
 Content-Type: application/json
 
 {
+  "video_id": "corrupt-clip-9",
   "job_id": "c1d2e3f4a5b6c7d8",
   "status": "failed",
-  "video_s3_uri": "s3://isteam-video-input/uploads/corrupt-clip.mp4",
-  "error": "No frames sampled - check the video / time window settings.",
-  "finished_at": "2026-09-03T12:15:00Z"
+  "error": "could not download video_url (HTTP 404)",
+  "finished_at": "2026-09-07T12:15:00Z"
 }
 ```
 
@@ -138,19 +154,19 @@ For Example 1, the log stream in
 ```
 === detection callback received ===
 method=POST source_ip=54.221.10.32
+  video_id = summer-lookbook-42
   job_id = 3f9c2a1b7d4e4f8a9c10ee55aa22bb33
   status = completed
-  video_s3_uri = s3://isteam-video-input/uploads/summer-lookbook.mp4
-  unique_suffix = summer-lookbook-3f9c2a1b-20260903T100200Z
   product_count = 4
-  detections_json_s3_uri = s3://isteam-video-output/detections/summer-lookbook-3f9c2a1b-20260903T100200Z/detections.json
-  detections_vtt_s3_uri = s3://isteam-video-output/detections/summer-lookbook-3f9c2a1b-20260903T100200Z/detections.vtt
-  detections_json_url = https://isteam-video-output.s3.us-east-1.amazonaws.com/detections/...
-  detections_vtt_url = https://isteam-video-output.s3.us-east-1.amazonaws.com/detections/...
-  finished_at = 2026-09-03T10:02:00Z
-raw_payload={"job_id": "3f9c2a1b7d4e4f8a9c10ee55aa22bb33", "status": "completed", ...}
+  finished_at = 2026-09-07T10:02:00Z
+  detections_json = <inline object, products=4>
+  detections_vtt = <inline WebVTT, 812 chars>
+raw_payload={"video_id": "summer-lookbook-42", "job_id": "3f9c2a1b...", "status": "completed", ...}
 === end callback ===
 ```
+
+The inline `detections_json` / `detections_vtt` are logged by size (not full
+content) to keep the log readable; the full payload is still in `raw_payload`.
 
 ---
 
@@ -161,5 +177,9 @@ raw_payload={"job_id": "3f9c2a1b7d4e4f8a9c10ee55aa22bb33", "status": "completed"
   default; on REST API tick "Use Lambda Proxy integration".
 - `Content-Type: application/json` is expected. The handler also tolerates a
   base64-encoded body (API Gateway sets `isBase64Encoded`) and decodes it.
+- **Payload size:** inline delivery means the body can be a few KB to low MB.
+  API Gateway caps the request body at ~10 MB and Lambda at 6 MB (sync). For very
+  large `.vtt` outputs, deliver via multipart or raise the threshold on the
+  worker side.
 - Auth: examples assume an open route for testing. For production put an API key,
   IAM auth, or a shared-secret header in front and have the worker send it.

@@ -4,6 +4,11 @@ A tiny AWS Lambda the worker POSTs to when a video finishes. It does **one
 thing: log the payload to CloudWatch** so you can watch results come in. It
 returns HTTP 200 so the worker considers the callback delivered.
 
+> **No storage (Architecture 2):** the worker sends `detections.json` and
+> `detections.vtt` **inline** in the callback body (`detections_json` object +
+> `detections_vtt` string), tagged with the caller's `video_id`. There are no S3
+> links — this Lambda logs the scalar fields plus the inline artifact sizes.
+
 - `handler.py` — the function. Entry point is `lambda_handler` (paste into the
   console's `lambda_function.py`, so the handler stays the default
   `lambda_function.lambda_handler`).
@@ -76,14 +81,14 @@ You'll see entries like:
 ```
 === detection callback received ===
 method=POST source_ip=…
+  video_id = abc-123
   job_id = 3f9c2a1b…
   status = completed
-  video_s3_uri = s3://isteam-video-input/uploads/clip.mp4
   product_count = 3
-  detections_json_s3_uri = s3://isteam-video-output/detections/clip-3f9c2a1b-…/detections.json
-  detections_vtt_s3_uri  = s3://isteam-video-output/detections/clip-3f9c2a1b-…/detections.vtt
-  finished_at = 2026-09-03T10:02:00Z
-raw_payload={"job_id": "3f9c2a1b…", "status": "completed", …}
+  finished_at = 2026-09-07T10:02:00Z
+  detections_json = <inline object, products=3>
+  detections_vtt = <inline WebVTT, 640 chars>
+raw_payload={"video_id": "abc-123", "job_id": "3f9c2a1b…", "status": "completed", …}
 === end callback ===
 ```
 
@@ -95,7 +100,7 @@ On the Lambda page, use the **Test** tab with this event to see a log line:
 
 ```json
 {
-  "body": "{\"job_id\":\"test123\",\"status\":\"completed\",\"video_s3_uri\":\"s3://in/clip.mp4\",\"product_count\":2}"
+  "body": "{\"video_id\":\"abc-123\",\"job_id\":\"test123\",\"status\":\"completed\",\"product_count\":2,\"detections_json\":{\"products\":[]},\"detections_vtt\":\"WEBVTT\\n\"}"
 }
 ```
 
@@ -105,7 +110,7 @@ Or hit the Function URL from your machine:
 
 ```powershell
 curl -Method POST "https://abc123....lambda-url.us-east-1.on.aws/" `
-  -Body '{"job_id":"test123","status":"completed","product_count":2}' `
+  -Body '{"video_id":"abc-123","job_id":"test123","status":"completed","product_count":2,"detections_json":{"products":[]},"detections_vtt":"WEBVTT\n"}' `
   -ContentType "application/json"
 ```
 
@@ -126,16 +131,13 @@ and handles base64), so it works behind API Gateway with no code changes.
 
 ```json
 {
+  "video_id": "abc-123",
   "job_id": "test-123",
   "status": "completed",
-  "video_s3_uri": "s3://isteam-video-input/uploads/clip.mp4",
-  "unique_suffix": "clip-test123-20260903T100200Z",
   "product_count": 3,
-  "detections_json_s3_uri": "s3://isteam-video-output/detections/clip-test123-20260903T100200Z/detections.json",
-  "detections_vtt_s3_uri": "s3://isteam-video-output/detections/clip-test123-20260903T100200Z/detections.vtt",
-  "detections_json_url": "https://example-presigned-url/detections.json",
-  "detections_vtt_url": "https://example-presigned-url/detections.vtt",
-  "finished_at": "2026-09-03T10:02:00Z"
+  "detections_json": { "video": { "id": "abc-123" }, "products": [] },
+  "detections_vtt": "WEBVTT\n\n00:00:01.000 --> 00:00:03.000\n[p0000] sneaker\n",
+  "finished_at": "2026-09-07T10:02:00Z"
 }
 ```
 

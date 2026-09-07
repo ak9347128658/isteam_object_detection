@@ -12,8 +12,8 @@ Pipeline stages
 2. frames      -> sample frames (with scene-change filtering)
 3. detect      -> open-vocabulary detection (YOLOE / YOLO-World), ignore humans
 4. dedup       -> collapse the same product across frames via CLIP embeddings
-5. match       -> find EXACT products on ecommerce via a pluggable backend
-6. s3 upload   -> push crops to S3
+5. match       -> find EXACT products on ecommerce (Google Lens via SerpApi)
+6. s3 upload   -> optional; matching can POST crops to SerpApi instead of S3
 7. metadata    -> write timestamped JSON (+ optional WebVTT) for video overlay
 
 Everything is driven by config.yaml. Nothing is hard-coded.
@@ -931,41 +931,51 @@ class Matcher:
     # -- SerpApi Google Lens ----------------------------------------------
     def _match_serpapi(self, image_path: str, image_url: Optional[str]) -> list[Recommendation]:
         """
-        Google Lens via SerpApi. Lens needs a publicly reachable image URL, so
-        pass the S3 URL of the crop (upload happens before matching in the
-        notebook). exact_matches yields the SAME product; that is what gives us
-        the 'exact watch', not just 'a watch'.
+        Google Lens via SerpApi.
+
+        If `image_url` is given (legacy S3 / public host), Lens fetches that URL.
+        Otherwise the local crop is POSTed to SerpApi's Image API and searched
+        by the returned `image_id` — no S3 (or any persistent storage) needed.
+        `image_id` expires after 10 minutes, so search runs immediately after
+        upload. exact_matches yields the SAME product, not just 'a watch'.
         """
         from serpapi import GoogleSearch
         api_key = os.getenv("SERPAPI_API_KEY")
         if not api_key:
             raise RuntimeError("SERPAPI_API_KEY is not set (see .env).")
-        if not image_url:
+        if not image_url and not (image_path and Path(image_path).is_file()):
             raise RuntimeError(
-                "Google Lens requires a public image URL. Upload the crop to S3 "
-                "with s3.public_read: true before matching (the notebook does "
-                "this automatically)."
+                "Google Lens needs either a public image URL or a local crop "
+                "file to upload to SerpApi's Image API."
             )
 
         lens_type = get(self.cfg, "matching.serpapi.lens_type", "exact_matches")
-        params = {
+        params: dict[str, Any] = {
             "engine": "google_lens",
-            "url": image_url,
             "type": lens_type,
             "country": get(self.cfg, "matching.serpapi.country", "us"),
             "hl": get(self.cfg, "matching.serpapi.language", "en"),
             "api_key": api_key,
         }
-        extra = json.dumps({k: v for k, v in params.items() if k != "api_key"},
-                           sort_keys=True)
-        cached = self.cache.get(image_path, extra)
+        if image_url:
+            params["url"] = image_url
+        # Cache key is image-content hash + Lens params. Do not include the
+        # ephemeral image_id (it expires) or a one-off S3 URL.
+        extra = json.dumps(
+            {k: v for k, v in params.items() if k != "api_key"},
+            sort_keys=True,
+        )
+        cached = self.cache.get(image_path, extra) if image_path else None
         if cached is not None:
             data = cached
         else:
+            if not image_url:
+                params["image_id"] = self._upload_serpapi_image(image_path, api_key)
             self.limiter.wait()
             data = with_retries(lambda: GoogleSearch(params).get_dict(),
                                 self.cfg, what="serpapi google_lens")
-            self.cache.put(image_path, extra, data)
+            if image_path:
+                self.cache.put(image_path, extra, data)
 
         if data.get("error"):
             print(f"   [match] SerpApi error: {data['error']}")
@@ -1009,9 +1019,90 @@ class Matcher:
         out = list(best.values())
         if not out:
             print(f"   [match] Google Lens returned no matches for this image. "
-                  f"If the crop is blurry/tiny or the S3 URL is not reachable, "
-                  f"Lens can't match it.")
+                  f"If the crop is blurry/tiny, Lens can't match it.")
         return out
+
+    def _upload_serpapi_image(self, image_path: str, api_key: str) -> str:
+        """POST a crop to SerpApi Image API; return the ephemeral image_id."""
+        import requests
+
+        payload, filename, mime = _bytes_for_serpapi_image(image_path)
+        timeout = float(get(self.cfg, "network.request_timeout_seconds", 30))
+
+        def _post() -> str:
+            resp = requests.post(
+                "https://serpapi.com/image",
+                files={"image": (filename, payload, mime)},
+                data={"api_key": api_key},
+                timeout=timeout,
+            )
+            resp.raise_for_status()
+            body = resp.json()
+            if body.get("error"):
+                raise RuntimeError(str(body["error"]))
+            image_id = body.get("image_id")
+            if not image_id:
+                raise RuntimeError(f"SerpApi Image API returned no image_id: {body}")
+            return image_id
+
+        self.limiter.wait()
+        return with_retries(_post, self.cfg, what="serpapi image upload")
+
+
+# SerpApi Image API rejects files over 500 KB.
+_SERPAPI_IMAGE_MAX_BYTES = 500 * 1024
+
+
+def _bytes_for_serpapi_image(
+    image_path: str,
+    max_bytes: int = _SERPAPI_IMAGE_MAX_BYTES,
+) -> tuple[bytes, str, str]:
+    """
+    Return (payload, filename, mime) within SerpApi's 500 KB Image API limit.
+    Lossless PNG crops often exceed that; we re-encode as JPEG and downscale
+    only as far as needed.
+    """
+    import cv2
+
+    path = Path(image_path)
+    data = path.read_bytes()
+    mime_by_ext = {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+    }
+    ext = path.suffix.lower()
+    if len(data) <= max_bytes and ext in mime_by_ext:
+        return data, path.name, mime_by_ext[ext]
+
+    img = cv2.imread(str(path))
+    if img is None:
+        raise RuntimeError(f"Could not read crop for SerpApi upload: {image_path}")
+
+    for scale in (1.0, 0.85, 0.7, 0.55, 0.4):
+        work = img
+        if scale < 1.0:
+            h, w = img.shape[:2]
+            work = cv2.resize(
+                work,
+                (max(1, int(w * scale)), max(1, int(h * scale))),
+                interpolation=cv2.INTER_AREA,
+            )
+        for quality in (90, 80, 70, 60, 50, 40):
+            ok, buf = cv2.imencode(
+                ".jpg", work, [cv2.IMWRITE_JPEG_QUALITY, int(quality)]
+            )
+            if not ok:
+                continue
+            payload = buf.tobytes()
+            if len(payload) <= max_bytes:
+                return payload, f"{path.stem}.jpg", "image/jpeg"
+
+    raise RuntimeError(
+        f"Crop {image_path} could not be compressed under SerpApi's "
+        f"{max_bytes} byte Image API limit."
+    )
 
 
 def _serpapi_score(section: str, position: int) -> float:
